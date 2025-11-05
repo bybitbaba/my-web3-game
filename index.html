@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web3 10-Click Challenge</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        #gameContainer {
+            background-color: #ffffff;
+            padding: 30px 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+        h1 {
+            color: #1a1a1a;
+            margin-top: 0;
+        }
+        p {
+            font-size: 1.1em;
+            color: #555;
+        }
+        #clickCount {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #007bff;
+            margin: 10px 0;
+        }
+        button {
+            font-size: 1.1em;
+            font-weight: bold;
+            padding: 12px 25px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #clickButton {
+            background-color: #007bff;
+            color: white;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        #clickButton:hover {
+            background-color: #0056b3;
+        }
+        #submitButton {
+            background-color: #ccc;
+            color: #666;
+            width: 100%;
+        }
+        #submitButton:not(:disabled) {
+            background-color: #28a745; /* Green */
+            color: white;
+        }
+        #submitButton:not(:disabled):hover {
+            background-color: #218838;
+        }
+        #submitButton:disabled {
+            cursor: not-allowed;
+        }
+        #status {
+            margin-top: 20px;
+            font-weight: bold;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="gameContainer">
+        <h1>10-Click Challenge</h1>
+        <p>Clicks:</p>
+        <div id="clickCount">0 / 10</div>
+        
+        <button id="clickButton">Click Me!</button>
+        <button id="submitButton" disabled>Submit Score to Blockchain</button>
+        
+        <p id="status"></p>
+    </div>
+
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+
+    <script>
+        let clickCount = 0;
+        const clickButton = document.getElementById('clickButton');
+        const submitButton = document.getElementById('submitButton');
+        const clickCountDisplay = document.getElementById('clickCount');
+        const statusDisplay = document.getElementById('status');
+
+        // Target network (Sepolia)
+        const targetNetwork = {
+            chainId_decimal: 11155111,
+            chainId_hex: "0xaa36a7",
+            chainName: "Sepolia test network",
+            nativeCurrency: { name: "SepoliaETH", symbol: "SepoliaETH", decimals: 18 },
+            rpcUrls: ["https://rpc.sepolia.org"],
+            blockExplorerUrls: ["https://sepolia.etherscan.io"]
+        };
+
+        // Game logic
+        clickButton.addEventListener('click', () => {
+            if (clickCount < 10) {
+                clickCount++;
+                clickCountDisplay.textContent = `${clickCount} / 10`;
+
+                if (clickCount === 10) {
+                    statusDisplay.textContent = "Game Complete! You can now submit your score.";
+                    clickButton.disabled = true;
+                    clickButton.style.backgroundColor = '#ccc';
+                    submitButton.disabled = false;
+                    submitButton.style.backgroundColor = '#28a745'; // Green
+                }
+            }
+        });
+
+        // Blockchain logic
+        submitButton.addEventListener('click', async () => {
+            statusDisplay.textContent = "Connecting to wallet...";
+            await submitScoreToBlockchain(clickCount);
+        });
+
+        
+        // Function: To check and switch network
+        async function checkAndSwitchNetwork(provider) {
+            try {
+                const network = await provider.getNetwork();
+                
+                if (network.chainId === targetNetwork.chainId_decimal) {
+                    console.log("Already connected to Sepolia.");
+                    return true;
+                }
+
+                statusDisplay.textContent = "Wrong network. Please switch to Sepolia.";
+                await provider.send("wallet_switchEthereumChain", [{ chainId: targetNetwork.chainId_hex }]);
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                return true;
+
+            } catch (switchError) {
+                if (switchError.code === 4902) {
+                    statusDisplay.textContent = "Sepolia network not found. Adding it to MetaMask...";
+                    try {
+                        await provider.send("wallet_addEthereumChain", [targetNetwork]);
+                        return await checkAndSwitchNetwork(provider);
+                    } catch (addError) {
+                        console.error("Failed to add Sepolia network:", addError);
+                        statusDisplay.textContent = "Error adding Sepolia network.";
+                        return false;
+                    }
+                }
+                console.error("Failed to switch network:", switchError);
+                statusDisplay.textContent = "You must switch to Sepolia network to submit.";
+                return false;
+            }
+        }
+
+        // Function: To submit score
+        async function submitScoreToBlockchain(score) {
+            if (typeof window.ethereum === 'undefined') {
+                statusDisplay.textContent = "Please install MetaMask to submit.";
+                return;
+            }
+
+            try {
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+
+                const networkOK = await checkAndSwitchNetwork(provider);
+                if (!networkOK) return;
+
+                const signer = provider.getSigner();
+
+                // -----------------------------------------------------------------
+                // !!! SABSE ZAROORI !!!
+                // Yahaan apna deploy kiya hua contract address daalein
+                // -----------------------------------------------------------------
+                const contractAddress = "YAHAN_AAPKA_CONTRACT_ADDRESS_AAYEGA";
+                // -----------------------------------------------------------------
+
+                const contractABI = [
+                    "function submitScore(uint256 _score)",
+                    "function highScores(address player) view returns (uint256)"
+                ];
+                
+                const gameContract = new ethers.Contract(contractAddress, contractABI, signer);
+
+                statusDisplay.textContent = "Sending transaction to Sepolia... please wait.";
+
+                const tx = await gameContract.submitScore(score);
+                
+                statusDisplay.textContent = "Transaction sent! Waiting for confirmation...";
+                
+                await tx.wait();
+                
+                statusDisplay.textContent = `Success! Your score of ${score} is saved on the Blockchain.`;
+                submitButton.disabled = true;
+
+            } catch (error) {
+                console.error(error);
+                if (error.code === 4001) {
+                    statusDisplay.textContent = "Transaction rejected by user.";
+                } else if (error.message.includes("Invalid score")) {
+                     statusDisplay.textContent = "Error: Invalid score! (Must be 10)";
+                } else {
+                    statusDisplay.textContent = "Error: Transaction failed.";
+                }
+            }
+        }
+    </script>
+</body>
+</html>
