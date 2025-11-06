@@ -1,471 +1,426 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Wordle Clone — Reset & Day/Night</title>
-    <style>
-        :root {
-            --dark-bg: #121213;
-            --card-bg: #0f1720;
-            --dark-grey: #3a3a3c;
-            --medium-grey: #818384;
-            --light-grey: #d3d6da;
-            --white: #ffffff;
-            --green: #538d4e;
-            --yellow: #b59f3b;
-        }
-
-        body.light {
-            --dark-bg: #f3f4f6;
-            --card-bg: #ffffff;
-            --dark-grey: #c7c7c7;
-            --medium-grey: #d7d7d7;
-            --light-grey: #222;
-            --white: #0b1220;
-            --green: #2e7d32;
-            --yellow: #b59f3b;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--dark-bg);
-            color: var(--white);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            user-select: none;
-            padding-bottom: 20px;
-            transition: background-color 0.25s, color 0.25s;
-        }
-
-        header {
-            border-bottom: 1px solid var(--dark-grey);
-            width: 100%;
-            max-width: 560px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
-            box-sizing: border-box;
-            gap: 8px;
-            background: transparent;
-        }
-        h1 { font-size: 1.2rem; margin: 0; letter-spacing: 0.12em; }
-
-        .header-controls { display:flex; gap:8px; align-items:center; }
-        .btn {
-            background: var(--card-bg);
-            color: var(--white);
-            border: 1px solid var(--dark-grey);
-            padding: 8px 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            display:inline-flex;
-            align-items:center;
-            gap:8px;
-        }
-        .btn.small { padding:6px 8px; font-size:0.9rem; }
-
-        #game-wrap { width: 100%; max-width: 560px; padding: 18px; box-sizing: border-box; }
-
-        #game-board {
-            display: grid;
-            grid-template-rows: repeat(6, 1fr);
-            grid-gap: 8px;
-            width: 330px;
-            height: 390px;
-            margin: 20px auto;
-        }
-        .row { display:grid; grid-template-columns: repeat(5, 1fr); grid-gap:8px; }
-
-        .tile {
-            width: 100%;
-            height: 100%;
-            border: 2px solid var(--dark-grey);
-            font-size: 2.2rem;
-            font-weight: 800;
-            display:flex; align-items:center; justify-content:center;
-            text-transform:uppercase;
-            box-sizing: border-box;
-            transition: transform 0.2s;
-            backface-visibility: hidden;
-            color: var(--white);
-            background: transparent;
-        }
-        .tile[data-state="wrong"] { background-color: var(--dark-grey); border-color: var(--dark-grey); color: #fff; }
-        .tile[data-state="wrong-location"] { background-color: var(--yellow); border-color: var(--yellow); color: #121212; }
-        .tile[data-state="correct"] { background-color: var(--green); border-color: var(--green); color: #fff; }
-
-        @keyframes bounce { 0%,20%{transform:translateY(0)}40%{transform:translateY(-8px)}50%{transform:translateY(4px)}60%{transform:translateY(-4px)}80%,100%{transform:translateY(0)}}
-        .tile.bounce { animation: bounce 0.5s ease; }
-
-        @keyframes flip { 0%{ transform: rotateX(0deg)} 50%{ transform: rotateX(90deg)} 100%{ transform: rotateX(0deg)}}
-        .tile.flip { animation: flip 0.36s linear; }
-
-        #keyboard { display:flex; flex-direction:column; width:100%; max-width:500px; margin:12px auto 0; }
-        .keyboard-row { display:flex; justify-content:center; margin:4px 0; }
-        .key {
-            background-color: var(--medium-grey);
-            color: var(--white);
-            font-weight:700;
-            border: 0;
-            border-radius:6px;
-            height:48px;
-            margin:0 6px;
-            cursor:pointer; flex:1; display:flex; align-items:center; justify-content:center; text-transform:uppercase;
-            transition: transform .08s ease, background-color .12s;
-            user-select:none;
-        }
-        .key.large { flex:1.5; }
-        .key[data-state="wrong"] { background-color: var(--dark-grey); }
-        .key[data-state="wrong-location"] { background-color: var(--yellow); color: #121212; }
-        .key[data-state="correct"] { background-color: var(--green); }
-
-        .modal { display:none; position:fixed; inset:0; z-index:30; background: rgba(0,0,0,0.55); align-items:center; justify-content:center; }
-        .modal .modal-content {
-            background: var(--card-bg);
-            border:1px solid var(--dark-grey);
-            padding:20px; border-radius:12px; width:90%; max-width:420px; text-align:center;
-        }
-
-        @media (max-width:420px){
-            #game-board { width:260px; height:310px; }
-            .tile { font-size:1.6rem; }
-            .key { height:44px; margin:0 4px; }
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Wordle ZK — Sepolia Test (Wallet Connect)</title>
+<style>
+:root{
+  --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --white:#e6eef6;
+  --green:#2ea44f; --yellow:#b59f3b; --tile:#2b2f36;
+}
+body { margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial; background:var(--bg); color:var(--white); min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+.header { width:100%; max-width:980px; display:flex; align-items:center; justify-content:space-between; padding:18px 20px; box-sizing:border-box; }
+.title { font-size:28px; font-weight:800; letter-spacing:-1px; }
+.header-right { display:flex; gap:10px; align-items:center; position:relative; }
+.btn { background:#172033; color:var(--white); border:0; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:700; }
+.btn.green { background:var(--green); color:#fff; }
+.status { font-size:0.9rem; color:var(--muted); padding:6px 10px; border-radius:8px; background:#071022; }
+.small-input { background:#071022; color:var(--white); border:1px solid rgba(255,255,255,0.03); padding:8px 10px; border-radius:8px; outline:none; width:300px; }
+.dropdown { position:absolute; top:48px; right:0; background:var(--card); border:1px solid rgba(255,255,255,0.04); padding:8px; border-radius:8px; display:none; min-width:220px; z-index:100; }
+.dropdown button { display:block; width:100%; margin:6px 0; text-align:left; }
+.panel { width:100%; max-width:980px; padding:0 20px 40px; box-sizing:border-box; }
+.card { background:var(--card); border-radius:12px; padding:18px; max-width:600px; margin:16px auto; border:1px solid rgba(255,255,255,0.03); color:var(--muted); }
+#game-board { display:grid; grid-template-rows:repeat(6,1fr); gap:8px; width:330px; height:390px; margin:14px auto; }
+.row { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+.tile { border:2px solid rgba(255,255,255,0.04); background:transparent; display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:800; text-transform:uppercase; color:var(--white); height:100%; }
+.tile[data-state="wrong"]{ background:var(--tile); border-color:var(--tile); }
+.tile[data-state="wrong-location"]{ background:var(--yellow); border-color:var(--yellow); color:#111; }
+.tile[data-state="correct"]{ background:var(--green); border-color:var(--green); color:#fff; }
+.keyboard-row { display:flex; justify-content:center; gap:6px; margin-top:8px; }
+.key { min-width:34px; height:44px; border-radius:8px; background:#1f2733; border:0; color:white; font-weight:800; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0 8px; }
+.key.large { min-width:86px; }
+.key[data-state="wrong"]{ background:#2b2f36; }
+.key[data-state="wrong-location"]{ background:var(--yellow); color:#111; }
+.key[data-state="correct"]{ background:var(--green); color:#fff; }
+.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:200; }
+.modal .card { max-width:420px; margin:0; }
+.small { font-size:0.9rem; color:var(--muted); }
+@media(max-width:420px){ #game-board{ width:260px; height:310px } .tile{ font-size:1.6rem } .key{ height:40px } .small-input{ width:150px } }
+</style>
 </head>
 <body>
-    <header>
-        <h1>WORDLE CLONE</h1>
-        <div class="header-controls">
-            <button id="reset-btn" class="btn small" title="Reset game">🔁 Reset</button>
-            <button id="theme-btn" class="btn small" title="Toggle day/night">🌙 / ☀️</button>
-        </div>
-    </header>
 
-    <div id="game-wrap">
-        <div id="instructions" style="max-width:520px;margin:6px auto 14px;background:var(--card-bg);border:1px solid var(--dark-grey);padding:12px;border-radius:8px;color:var(--light-grey);">
-            <strong>Instructions:</strong>
-            <ul style="margin:8px 0 0 18px;padding:0">
-                <li>You have 6 chances to guess the word (5 letters)</li>
-                <li>Green = correct place, Yellow = present but wrong place, Grey = not present</li>
-            </ul>
-        </div>
+  <header class="header">
+    <div class="title">Wordle ZK (Sepolia)</div>
 
-        <div id="game-board"></div>
-        <div id="keyboard"></div>
+    <div class="header-right">
+      <!-- Contract input pre-filled with your provided Sepolia address -->
+      <input id="contract-input" class="small-input" placeholder="Sepolia contract address (optional)" />
+      <button id="save-contract" class="btn">Save</button>
+
+      <div id="wallet-badge" class="status">Not connected</div>
+      <button id="connect-btn" class="btn green">Connect Wallet</button>
+
+      <!-- Dropdown with providers -->
+      <div id="connect-dropdown" class="dropdown" role="menu" aria-hidden="true">
+        <div style="font-weight:700; color:var(--white); margin-bottom:6px;">Choose Wallet</div>
+        <button id="connect-metamask" class="btn" type="button">MetaMask</button>
+        <button id="connect-okx" class="btn" type="button">OKX Wallet</button>
+        <button id="connect-injected" class="btn" type="button">Injected (Other)</button>
+        <div class="small" style="margin-top:6px">If not detected, open your wallet extension and try "Injected".</div>
+      </div>
     </div>
+  </header>
 
-    <!-- Modal -->
-    <div id="game-modal" class="modal" role="dialog" aria-modal="true">
-        <div class="modal-content">
-            <h2 id="modal-title">Congratulations!</h2>
-            <div class="word" id="modal-word" style="font-size:2rem;font-weight:800;color:var(--green);margin:6px 0">CLOUD</div>
-            <p id="modal-subtitle">You guessed it in 6 guesses!</p>
-            <div id="modal-proof-status" style="margin-top:8px;font-weight:700"></div>
-            <div style="margin-top:12px;">
-                <a id="modal-explorer-link" href="#" target="_blank" style="color:var(--light-grey);display:none;">View tx on explorer</a>
-            </div>
-            <div style="margin-top:14px;">
-                <button id="submit-score-btn" class="btn" style="display:none;background:var(--green);">Submit Score to Blockchain</button>
-            </div>
-        </div>
+  <main class="panel">
+    <div class="card">
+      <div style="text-align:center; margin-bottom:12px;">
+        <div class="small">Paste your Sepolia contract address (already filled), connect MetaMask/OKX, then play. When you win, click Submit Score to send the transaction to Sepolia.</div>
+      </div>
+
+      <div id="game-board"></div>
+      <div id="keyboard" style="max-width:500px; margin:0 auto;"></div>
     </div>
+  </main>
 
-    <!-- ethers (same CDN as before) -->
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <!-- Win modal -->
+  <div id="result-modal" class="modal" aria-hidden="true">
+    <div class="card">
+      <h3 id="modal-title">Congratulations!</h3>
+      <div id="modal-word" style="font-weight:800; font-size:22px; color:var(--green); margin:8px 0;">CLOUD</div>
+      <div id="modal-sub" class="small">You guessed it in 4 guesses</div>
+      <div id="modal-status" class="small" style="margin-top:10px;"></div>
+      <div style="margin-top:12px;">
+        <button id="submit-btn" class="btn" style="background:var(--green); color:white; display:none;">Submit Score</button>
+        <button id="close-result" class="btn" style="margin-left:8px;">Close</button>
+      </div>
+    </div>
+  </div>
 
-    <script>
-    /*******************************
-     * Game variables & settings
-     *******************************/
-    const WORD_LIST = ["CLOUD","GHOST","TABLE","APPLE","HOUSE","PLANE","TRAIN","BRICK","FRAME","LIGHT"];
-    let SECRET_WORD = chooseWord();
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<script>
+/* -------------- CONFIG --------------
+   Your Sepolia contract address is set here as default.
+   Replace if you want to use a different address.
+-------------------------------------- */
+let CONTRACT_ADDRESS = "0xC5eed354DeAeCddbF17445518A305F7Ced43Fd7e";
+const CONTRACT_ABI = ["function submitWordleScore(uint256 guesses)"];
+const TARGET = {
+  chainId_decimal: 11155111,
+  chainId_hex: "0xaa36a7",
+  chainName: "Sepolia test network",
+  nativeCurrency: { name: "SepoliaETH", symbol: "SepoliaETH", decimals: 18 },
+  rpcUrls: ["https://rpc.sepolia.org"],
+  blockExplorerUrls: ["https://sepolia.etherscan.io"]
+};
 
-    const BOARD_ROWS = 6;
-    const WORD_LENGTH = 5;
+/* ------------- Game State -------------- */
+const WORD_LIST = ["CLOUD","GHOST","TABLE","APPLE","HOUSE","PLANE","TRAIN","BRICK","FRAME","LIGHT"];
+let SECRET = chooseWord();
+const ROWS = 6, LEN = 5;
+let currentRow = 0, currentCol = 0, isGameOver = false;
+let guesses = Array(ROWS).fill(null).map(()=>Array(LEN).fill(""));
 
-    let currentRow = 0;
-    let currentCol = 0;
-    let guesses = Array(BOARD_ROWS).fill(null).map(()=>Array(WORD_LENGTH).fill(""));
-    let isGameOver = false;
+/* ------------- Wallet State ------------ */
+let ethersProvider = null, signer = null, connectedAddress = null, connectedProviderName = null;
 
-    // Elements
-    const gameBoard = document.getElementById('game-board');
-    const keyboard = document.getElementById('keyboard');
-    const resetBtn = document.getElementById('reset-btn');
-    const themeBtn = document.getElementById('theme-btn');
-    const modal = document.getElementById('game-modal');
-    const modalTitle = document.getElementById('modal-title');
-    const modalWord = document.getElementById('modal-word');
-    const modalSubtitle = document.getElementById('modal-subtitle');
-    const modalProof = document.getElementById('modal-proof-status');
-    const modalExplorer = document.getElementById('modal-explorer-link');
-    const submitScoreBtn = document.getElementById('submit-score-btn');
+/* ------------- UI elements ------------- */
+const connectBtn = document.getElementById('connect-btn');
+const dropdown = document.getElementById('connect-dropdown');
+const connectMeta = document.getElementById('connect-metamask');
+const connectOkx = document.getElementById('connect-okx');
+const connectInjected = document.getElementById('connect-injected');
+const walletBadge = document.getElementById('wallet-badge');
+const contractInput = document.getElementById('contract-input');
+const saveContractBtn = document.getElementById('save-contract');
 
-    // Blockchain placeholders (unchanged)
-    const targetNetwork = {
-        chainId_decimal: 11155111,
-        chainId_hex: "0xaa36a7",
-        chainName: "Sepolia test network",
-        nativeCurrency: { name: "SepoliaETH", symbol: "SepoliaETH", decimals: 18 },
-        rpcUrls: ["https://rpc.sepolia.org"],
-        blockExplorerUrls: ["https://sepolia.etherscan.io"]
-    };
-    const contractAddress = "YAHAN_AAPKA_NAYA_WORDLE_CONTRACT_ADDRESS_AAYEGA";
-    const contractABI = ["function submitWordleScore(uint256 guesses)","function bestScore(address player) view returns (uint256)"];
+const board = document.getElementById('game-board');
+const keyboard = document.getElementById('keyboard');
+const resultModal = document.getElementById('result-modal');
+const modalTitle = document.getElementById('modal-title');
+const modalWord = document.getElementById('modal-word');
+const modalSub = document.getElementById('modal-sub');
+const modalStatus = document.getElementById('modal-status');
+const submitBtn = document.getElementById('submit-btn');
+const closeResult = document.getElementById('close-result');
 
-    /*******************************
-     * Helpers
-     *******************************/
-    function chooseWord() {
-        return WORD_LIST[Math.floor(Math.random()*WORD_LIST.length)];
+/* ------------- Helpers ----------------- */
+function chooseWord(){ return WORD_LIST[Math.floor(Math.random()*WORD_LIST.length)]; }
+function short(addr){ return addr ? addr.slice(0,6)+'...'+addr.slice(-4) : ''; }
+function setBadge(txt){ walletBadge.textContent = txt; }
+
+/* -------------- Init UI ---------------- */
+function initBoard(){
+  board.innerHTML = '';
+  for(let r=0;r<ROWS;r++){
+    const row = document.createElement('div'); row.className='row';
+    for(let c=0;c<LEN;c++){
+      const t = document.createElement('div'); t.className='tile'; t.id = `tile-${r}-${c}`; t.dataset.state='empty';
+      row.appendChild(t);
     }
+    board.appendChild(row);
+  }
+}
+function initKeyboard(){
+  keyboard.innerHTML = '';
+  const layout = ["q w e r t y u i o p","a s d f g h j k l","enter z x c v b n m backspace"];
+  layout.forEach(r=>{
+    const row = document.createElement('div'); row.className='keyboard-row';
+    r.split(' ').forEach(k=>{
+      const b = document.createElement('button'); b.className='key'; b.id = `key-${k}`; b.textContent = (k==='backspace')?'⌫':(k==='enter'?'ENTER':k.toUpperCase());
+      b.disabled = false; b.dataset.state = '';
+      if(k==='enter' || k==='backspace') b.classList.add('large');
+      b.addEventListener('click', ()=> handleKey(k));
+      row.appendChild(b);
+    });
+    keyboard.appendChild(row);
+  });
+}
 
-    function initBoard() {
-        gameBoard.innerHTML = "";
-        for (let r=0;r<BOARD_ROWS;r++){
-            const rowEl = document.createElement('div'); rowEl.className='row';
-            for (let c=0;c<WORD_LENGTH;c++){
-                const tile = document.createElement('div');
-                tile.className='tile';
-                tile.id = `tile-${r}-${c}`;
-                tile.dataset.state = 'empty';
-                rowEl.appendChild(tile);
-            }
-            gameBoard.appendChild(rowEl);
-        }
+/* ------------- Input handlers ---------- */
+function handleKey(key){
+  if(isGameOver) return;
+  if(key==='enter') submitGuess();
+  else if(key==='backspace') deleteLetter();
+  else if(key.length===1 && /[a-z]/i.test(key)) addLetter(key);
+}
+function handlePhysical(e){
+  if(isGameOver) return;
+  if(e.key==='Enter') handleKey('enter');
+  else if(e.key==='Backspace') handleKey('backspace');
+  else if(e.key.length===1 && /[a-z]/i.test(e.key)) handleKey(e.key.toLowerCase());
+}
+
+function addLetter(letter){
+  if(currentCol >= LEN) return;
+  const ch = letter.toUpperCase();
+  guesses[currentRow][currentCol] = ch;
+  const tile = document.getElementById(`tile-${currentRow}-${currentCol}`);
+  if(!tile) return;
+  tile.textContent = ch; tile.dataset.state='tbd';
+  tile.classList.add('bounce'); tile.addEventListener('animationend', ()=> tile.classList.remove('bounce'), {once:true});
+  currentCol++;
+}
+function deleteLetter(){
+  if(currentCol === 0) return;
+  currentCol--;
+  guesses[currentRow][currentCol] = "";
+  const tile = document.getElementById(`tile-${currentRow}-${currentCol}`);
+  if(!tile) return;
+  tile.textContent = ""; tile.dataset.state='empty';
+}
+
+async function submitGuess(){
+  if(currentCol !== LEN){
+    const t = document.getElementById(`tile-${currentRow}-0`);
+    if(t){ t.classList.add('bounce'); t.addEventListener('animationend', ()=> t.classList.remove('bounce'), {once:true}); }
+    return;
+  }
+  isGameOver = true;
+  const guess = guesses[currentRow].join("").toUpperCase();
+  const freq = {}; for(const ch of SECRET) freq[ch] = (freq[ch]||0)+1;
+  const statuses = Array(LEN).fill('wrong');
+  for(let i=0;i<LEN;i++){ if(guess[i] === SECRET[i]){ statuses[i]='correct'; freq[guess[i]]--; } }
+  for(let i=0;i<LEN;i++){ if(statuses[i] !== 'correct'){ const ch=guess[i]; if(SECRET.includes(ch) && freq[ch] > 0){ statuses[i]='wrong-location'; freq[ch]--; } } }
+
+  const promises = [];
+  for(let i=0;i<LEN;i++){
+    const tile = document.getElementById(`tile-${currentRow}-${i}`);
+    const state = statuses[i];
+    if(!tile) continue;
+    promises.push(new Promise(resolve=>{
+      setTimeout(()=>{ tile.classList.add('flip'); setTimeout(()=> tile.dataset.state = state, 140); tile.addEventListener('animationend', ()=>{ tile.classList.remove('flip'); resolve(); }, {once:true}); }, i*110);
+    }));
+  }
+  await Promise.all(promises);
+
+  // keyboard visuals only
+  for(let i=0;i<LEN;i++){
+    const letter = guess[i];
+    const keyEl = document.getElementById(`key-${letter.toLowerCase()}`);
+    const state = statuses[i];
+    if(!keyEl) continue;
+    const cur = keyEl.dataset.state || '';
+    if(state === 'correct') keyEl.dataset.state='correct';
+    else if(state === 'wrong-location' && cur !== 'correct') keyEl.dataset.state='wrong-location';
+    else if(state === 'wrong' && cur !== 'correct' && cur !== 'wrong-location') keyEl.dataset.state='wrong';
+    keyEl.disabled = false; keyEl.style.cursor = '';
+  }
+
+  if(guess === SECRET){
+    showResult(true, currentRow+1); return;
+  }
+  if(currentRow === ROWS-1){
+    showResult(false, currentRow+1); return;
+  }
+  currentRow++; currentCol = 0; isGameOver = false;
+}
+
+/* -------------- Result modal ------------- */
+function showResult(win, count){
+  if(win){
+    modalTitle.textContent = "You Win!";
+    modalWord.textContent = SECRET;
+    modalSub.textContent = `You guessed it in ${count} guesses.`;
+    modalStatus.textContent = "Ready to submit (optional).";
+    submitBtn.style.display = 'inline-flex';
+    submitBtn.disabled = false;
+  } else {
+    modalTitle.textContent = "Game Over";
+    modalWord.textContent = SECRET;
+    modalSub.textContent = "Try again next time!";
+    modalStatus.textContent = "";
+    submitBtn.style.display = 'none';
+  }
+  resultModal.style.display = 'flex';
+
+  // Wire submit
+  submitBtn.onclick = async ()=> { await submitScore(count); };
+}
+function closeResult(){ resultModal.style.display = 'none'; }
+
+/* --------------- Reset ------------------ */
+function resetGame(){
+  SECRET = chooseWord();
+  currentRow = 0; currentCol = 0; guesses = Array(ROWS).fill(null).map(()=>Array(LEN).fill(""));
+  isGameOver = false; initBoard(); initKeyboard(); closeResult();
+  document.querySelectorAll('.key').forEach(k=>{ k.dataset.state=''; k.disabled=false; k.style.cursor=''; });
+}
+
+/* -------------- Wallet UI --------------- */
+function toggleDropdown(){ dropdown.style.display = (dropdown.style.display==='block') ? 'none' : 'block'; dropdown.setAttribute('aria-hidden', dropdown.style.display === 'none'); }
+document.addEventListener('click', (e)=>{ if(!e.target.closest('.header-right')) dropdown.style.display='none'; });
+
+connectBtn.addEventListener('click', toggleDropdown);
+connectMeta.addEventListener('click', ()=> connectProvider('metamask'));
+connectOkx.addEventListener('click', ()=> connectProvider('okx'));
+connectInjected.addEventListener('click', ()=> connectProvider('injected'));
+
+contractInput.value = CONTRACT_ADDRESS;
+saveContractBtn.addEventListener('click', ()=> {
+  const v = (contractInput.value||"").trim();
+  if(!v){ alert('Paste contract address to save (optional).'); return; }
+  CONTRACT_ADDRESS = v;
+  alert('Contract address saved locally.');
+});
+
+/* ------------- Connect Providers ---------- */
+async function connectProvider(kind){
+  dropdown.style.display = 'none';
+  try {
+    if(kind === 'metamask'){
+      if(!window.ethereum || !window.ethereum.isMetaMask){ alert('MetaMask not detected.'); return; }
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      ethersProvider = new ethers.providers.Web3Provider(window.ethereum);
+      signer = ethersProvider.getSigner();
+      connectedAddress = await signer.getAddress();
+      connectedProviderName = 'MetaMask';
+    } else if(kind === 'okx'){
+      const okxRaw = window.okxwallet || (window.ethereum && window.ethereum.isOkxWallet ? window.ethereum : null);
+      if(!okxRaw && !window.ethereum){ alert('OKX Wallet not detected.'); return; }
+      const raw = okxRaw || window.ethereum;
+      await raw.request({ method: 'eth_requestAccounts' });
+      ethersProvider = new ethers.providers.Web3Provider(raw);
+      signer = ethersProvider.getSigner();
+      connectedAddress = await signer.getAddress();
+      connectedProviderName = 'OKX Wallet';
+    } else {
+      if(!window.ethereum){ alert('No injected provider detected.'); return; }
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      ethersProvider = new ethers.providers.Web3Provider(window.ethereum);
+      signer = ethersProvider.getSigner();
+      connectedAddress = await signer.getAddress();
+      connectedProviderName = (window.ethereum.isMetaMask ? 'MetaMask' : (window.ethereum.isOkxWallet ? 'OKX' : 'Injected'));
     }
+    setBadge((connectedProviderName||'Wallet') + ': ' + short(connectedAddress));
+    dropdown.style.display='none';
 
-    function initKeyboard(){
-        keyboard.innerHTML = "";
-        const keyLayout = ["q w e r t y u i o p","a s d f g h j k l","enter z x c v b n m backspace"];
-        keyLayout.forEach(row=>{
-            const rowEl = document.createElement('div'); rowEl.className='keyboard-row';
-            row.split(' ').forEach(k=>{
-                const keyEl = document.createElement('button');
-                keyEl.className='key';
-                keyEl.id = `key-${k}`;
-                keyEl.textContent = (k === 'backspace') ? '⌫' : (k === 'enter' ? 'ENTER' : k.toUpperCase());
-                // Ensure key is enabled and state cleared (IMPORTANT: do NOT disable keys)
-                keyEl.disabled = false;
-                keyEl.style.cursor = '';
-                keyEl.dataset.state = "";
-
-                if (k==='enter' || k==='backspace') keyEl.classList.add('large');
-                keyEl.addEventListener('click', ()=> handleKeyPress(k));
-                rowEl.appendChild(keyEl);
-            });
-            keyboard.appendChild(rowEl);
-        });
+    // Listen for account/chain changes if provider supports it
+    const rawProv = ethersProvider.provider;
+    if(rawProv && rawProv.on){
+      rawProv.on('accountsChanged', (accs)=>{
+        if(!accs || accs.length === 0) { disconnect(); } else { connectedAddress = accs[0]; setBadge(connectedProviderName + ': ' + short(connectedAddress)); }
+      });
+      rawProv.on('chainChanged', (cid)=>{
+        const dec = (typeof cid === 'string' && cid.startsWith('0x')) ? parseInt(cid,16) : cid;
+        setBadge(connectedProviderName + ': ' + short(connectedAddress) + ' • chain ' + dec);
+      });
     }
+  } catch(err){
+    console.error(err); alert('Connect failed or cancelled.');
+  }
+}
+function disconnect(){
+  ethersProvider = null; signer = null; connectedAddress = null; connectedProviderName = null;
+  setBadge('Not connected');
+}
 
-    function resetGame(){
-        SECRET_WORD = chooseWord();
-        currentRow = 0; currentCol = 0;
-        guesses = Array(BOARD_ROWS).fill(null).map(()=>Array(WORD_LENGTH).fill(""));
-        isGameOver = false;
-
-        // UI reset
-        initBoard();
-        initKeyboard();
-        closeModal();
-
-        // Clear key visual state
-        document.querySelectorAll('.key').forEach(k => {
-            k.dataset.state = "";
-            k.disabled = false;
-            k.style.cursor = '';
-        });
+/* ------------- Network helper ------------- */
+async function ensureSepolia(rawProvider, statusEl){
+  try {
+    if(!rawProvider || !rawProvider.request){ if(statusEl) statusEl.textContent = 'Wallet provider missing.'; return false; }
+    const chainIdHex = await rawProvider.request({ method: 'eth_chainId' });
+    const cur = (typeof chainIdHex === 'string' && chainIdHex.startsWith('0x')) ? parseInt(chainIdHex,16) : Number(chainIdHex);
+    if(cur === TARGET.chainId_decimal) return true;
+    if(statusEl) statusEl.textContent = 'Requesting network switch to Sepolia...';
+    try {
+      await rawProvider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: TARGET.chainId_hex }] });
+      return true;
+    } catch(switchErr){
+      if(switchErr && (switchErr.code === 4902 || (switchErr.message && switchErr.message.includes('4902')))){
+        try {
+          await rawProvider.request({ method:'wallet_addEthereumChain', params: [{
+            chainId: TARGET.chainId_hex, chainName: TARGET.chainName, nativeCurrency: TARGET.nativeCurrency, rpcUrls: TARGET.rpcUrls, blockExplorerUrls: TARGET.blockExplorerUrls
+          }]});
+          await rawProvider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: TARGET.chainId_hex }] });
+          return true;
+        } catch(addErr){ console.error(addErr); if(statusEl) statusEl.textContent = 'Could not add Sepolia.'; return false; }
+      }
+      if(statusEl) statusEl.textContent = 'Please switch wallet network to Sepolia.'; return false;
     }
+  } catch(e){ console.error(e); if(statusEl) statusEl.textContent = 'Network check failed.'; return false; }
+}
 
-    /*******************************
-     * Input handling
-     *******************************/
-    function handleKeyPress(key){
-        if (isGameOver) return;
-        if (key === 'enter') submitGuess();
-        else if (key === 'backspace') deleteLetter();
-        else if (key.length === 1 && key.match(/[a-z]/i)) addLetter(key);
-    }
+/* ------------ Submit score to chain -------- */
+async function submitScore(guessesCount){
+  if(!signer || !ethersProvider){ modalStatus.textContent = 'Connect a wallet first.'; return; }
+  const addressToUse = CONTRACT_ADDRESS || (contractInput.value||"").trim();
+  if(!addressToUse){ modalStatus.textContent = 'No contract address set. Paste & Save the address on top-right.'; return; }
 
-    function handlePhysicalKeyboard(e){
-        if (isGameOver) return;
-        if (e.key === 'Enter') handleKeyPress('enter');
-        else if (e.key === 'Backspace') handleKeyPress('backspace');
-        else if (e.key.length === 1 && e.key.match(/[a-z]/i)) handleKeyPress(e.key.toLowerCase());
-    }
+  const raw = ethersProvider.provider || window.ethereum;
+  const ok = await ensureSepolia(raw, modalStatus);
+  if(!ok) return;
 
-    function addLetter(letter){
-        if (currentCol >= WORD_LENGTH) return;
-        const ch = letter.toUpperCase();
-        guesses[currentRow][currentCol] = ch;
-        const tile = document.getElementById(`tile-${currentRow}-${currentCol}`);
-        if (!tile) return;
-        tile.textContent = ch;
-        tile.dataset.state = 'tbd';
-        tile.classList.add('bounce');
-        tile.addEventListener('animationend', ()=> tile.classList.remove('bounce'), {once:true});
-        currentCol++;
-    }
+  try {
+    modalStatus.textContent = 'Sending transaction... Approve in wallet.';
+    const contract = new ethers.Contract(addressToUse, CONTRACT_ABI, signer);
+    const tx = await contract.submitWordleScore(guessesCount);
+    modalStatus.textContent = 'Transaction sent. Awaiting confirmation...';
+    await tx.wait();
+    modalStatus.textContent = 'Success — score submitted!';
+    const url = `https://sepolia.etherscan.io/tx/${tx.hash}`;
+    submitBtn.style.display = 'none';
+    const linkEl = document.createElement('a'); linkEl.href = url; linkEl.target = '_blank'; linkEl.textContent = 'View transaction on Sepolia Etherscan';
+    linkEl.style.display = 'inline-block'; linkEl.style.marginTop = '10px'; linkEl.style.color = '#9cc4a3';
+    modalStatus.appendChild(document.createElement('br'));
+    modalStatus.appendChild(linkEl);
+  } catch(err){
+    console.error(err);
+    if(err && err.code === 4001) modalStatus.textContent = 'Transaction rejected by user.';
+    else modalStatus.textContent = 'Transaction failed. See console.';
+  }
+}
 
-    function deleteLetter(){
-        if (currentCol === 0) return;
-        currentCol--;
-        guesses[currentRow][currentCol] = "";
-        const tile = document.getElementById(`tile-${currentRow}-${currentCol}`);
-        if (!tile) return;
-        tile.textContent = "";
-        tile.dataset.state = 'empty';
-    }
+/* ------------- Wire events & boot ---------- */
+contractInput.value = CONTRACT_ADDRESS;
+saveContractBtn.addEventListener('click', ()=> { const v=(contractInput.value||"").trim(); if(!v){ alert('Paste contract address to save (optional).'); return; } CONTRACT_ADDRESS = v; alert('Contract address saved locally.'); });
 
-    async function submitGuess(){
-        if (currentCol !== WORD_LENGTH){
-            const tile = document.getElementById(`tile-${currentRow}-0`);
-            if (tile) { tile.classList.add('bounce'); tile.addEventListener('animationend', ()=> tile.classList.remove('bounce'), {once:true}); }
-            return;
-        }
-        isGameOver = true;
+connectBtn.addEventListener('click', toggleDropdown);
+connectMeta.addEventListener('click', ()=> connectProvider('metamask'));
+connectOkx.addEventListener('click', ()=> connectProvider('okx'));
+connectInjected.addEventListener('click', ()=> connectProvider('injected'));
 
-        const guess = guesses[currentRow].join("").toUpperCase();
-        const secretFreq = {};
-        for (const ch of SECRET_WORD) secretFreq[ch] = (secretFreq[ch]||0)+1;
-        const statuses = Array(WORD_LENGTH).fill('wrong');
+document.addEventListener('keydown', handlePhysical);
+window.addEventListener('click', (e)=> { if(!e.target.closest('.header-right')) dropdown.style.display = 'none'; });
+document.getElementById('close-result').addEventListener('click', closeResult);
 
-        // pass 1: correct
-        for (let i=0;i<WORD_LENGTH;i++){
-            if (guess[i] === SECRET_WORD[i]) { statuses[i] = 'correct'; secretFreq[guess[i]]--; }
-        }
-        // pass 2: wrong-location
-        for (let i=0;i<WORD_LENGTH;i++){
-            if (statuses[i] !== 'correct'){
-                const ch = guess[i];
-                if (SECRET_WORD.includes(ch) && secretFreq[ch] > 0) { statuses[i] = 'wrong-location'; secretFreq[ch]--; }
-            }
-        }
+// boot
+initBoard(); initKeyboard(); setBadge('Not connected');
 
-        // reveal with staggered flip (use animationend)
-        const flipPromises = [];
-        for (let i=0;i<WORD_LENGTH;i++){
-            const tile = document.getElementById(`tile-${currentRow}-${i}`);
-            const state = statuses[i];
-            if (!tile) continue;
-            flipPromises.push(new Promise(resolve=>{
-                setTimeout(()=>{
-                    tile.classList.add('flip');
-                    setTimeout(()=> tile.dataset.state = state, 140); // mid-flip reveal
-                    tile.addEventListener('animationend', ()=>{
-                        tile.classList.remove('flip');
-                        resolve();
-                    }, {once:true});
-                }, i*110);
-            }));
-        }
-        await Promise.all(flipPromises);
-
-        // --- KEYBOARD UPDATE: only visual state, DO NOT disable keys ---
-        for (let i=0;i<WORD_LENGTH;i++){
-            const letter = guess[i];
-            const keyEl = document.getElementById(`key-${letter.toLowerCase()}`);
-            const state = statuses[i];
-            if (!keyEl) continue;
-            const cur = keyEl.dataset.state || "";
-            if (state === 'correct') {
-                keyEl.dataset.state = 'correct';
-            } else if (state === 'wrong-location' && cur !== 'correct') {
-                keyEl.dataset.state = 'wrong-location';
-            } else if (state === 'wrong' && cur !== 'correct' && cur !== 'wrong-location') {
-                keyEl.dataset.state = 'wrong';
-            }
-            // ensure key remains clickable (no disabling)
-            keyEl.disabled = false;
-            keyEl.style.cursor = '';
-        }
-
-        // check result
-        if (guess === SECRET_WORD){
-            showModal(true, currentRow+1);
-            return;
-        }
-        if (currentRow === BOARD_ROWS-1){
-            showModal(false, currentRow+1);
-            return;
-        }
-        currentRow++; currentCol = 0; isGameOver = false;
-    }
-
-    /*******************************
-     * Modal / "ZK" simulation
-     *******************************/
-    function showModal(didWin, guessesCount){
-        if (didWin){
-            modalTitle.textContent = "Congratulations!";
-            modalWord.textContent = SECRET_WORD;
-            modalSubtitle.textContent = `You guessed it in ${guessesCount} guesses!`;
-            modalProof.style.display = 'block';
-            modalProof.textContent = 'Generating proof...';
-            modalExplorer.style.display = 'none';
-            submitScoreBtn.style.display = 'none';
-            submitScoreBtn.disabled = false;
-
-            setTimeout(()=>{
-                modalProof.textContent = '✅ VERIFIED!';
-                modalExplorer.style.display = 'block';
-                submitScoreBtn.style.display = 'inline-flex';
-            }, 1400);
-
-            submitScoreBtn.onclick = ()=> {
-                modalProof.textContent = 'Submitting... (wallet required)';
-                // existing blockchain submission function can be called here if wired
-            };
-        } else {
-            modalTitle.textContent = "Game Over";
-            modalWord.textContent = SECRET_WORD;
-            modalSubtitle.textContent = "Better luck next time!";
-            modalProof.style.display = 'none';
-            modalExplorer.style.display = 'none';
-            submitScoreBtn.style.display = 'none';
-        }
-        modal.style.display = 'flex';
-    }
-
-    function closeModal(){ modal.style.display = 'none'; }
-
-    /*******************************
-     * Theme toggle
-     *******************************/
-    const THEME_KEY = 'zkwordle_theme';
-    function loadTheme(){
-        const saved = localStorage.getItem(THEME_KEY);
-        if (saved === 'light') document.body.classList.add('light');
-    }
-    function toggleTheme(){
-        document.body.classList.toggle('light');
-        const isLight = document.body.classList.contains('light');
-        localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark');
-    }
-
-    /*******************************
-     * Wire up UI & start
-     *******************************/
-    initBoard();
-    initKeyboard();
-    loadTheme();
-
-    document.addEventListener('keydown', handlePhysicalKeyboard);
-    resetBtn.addEventListener('click', resetGame);
-    themeBtn.addEventListener('click', toggleTheme);
-
-    window.addEventListener('click', (e)=> { if (e.target === modal) closeModal(); });
-    window.addEventListener('keydown', (e)=> { if (e.key === 'Escape') closeModal(); });
-
-    // for debug in console
-    window.resetGame = resetGame;
-    </script>
+// expose for debug
+window.resetGame = resetGame;
+window.connectProvider = connectProvider;
+</script>
 </body>
 </html>
