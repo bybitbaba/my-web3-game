@@ -1,363 +1,664 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Wordle + Wallet (Sepolia auto-switch)</title>
-<style>
-:root{
-  --bg:#121213; --card:#0f1720; --muted:#9aa4b2; --white:#e6eef6;
-  --green:#2ea44f; --yellow:#b59f3b; --tile:#2b2f36;
-}
-body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--white);display:flex;flex-direction:column;align-items:center;min-height:100vh;}
-.header{width:100%;max-width:720px;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;box-sizing:border-box;}
-.title{font-weight:800;letter-spacing:.12em}
-.header-actions{display:flex;gap:10px;align-items:center;position:relative}
-.btn{background:var(--card);color:var(--white);border:1px solid rgba(255,255,255,.04);padding:8px 12px;border-radius:8px;cursor:pointer}
-.btn.green{background:var(--green);color:#fff;border:0}
-.badge{background:rgba(255,255,255,0.02);padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);font-weight:700}
-.container{width:100%;max-width:560px;padding:18px;box-sizing:border-box}
-.card{background:var(--card);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,.03);color:var(--muted)}
-#game-board{display:grid;grid-template-rows:repeat(6,1fr);gap:8px;width:330px;height:390px;margin:14px auto}
-.row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-.tile{border:2px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:2.2rem;height:100%;text-transform:uppercase;background:transparent;color:var(--white)}
-.tile[data-state="wrong"]{background:var(--tile);border-color:var(--tile);color:#fff}
-.tile[data-state="wrong-location"]{background:var(--yellow);border-color:var(--yellow);color:#111}
-.tile[data-state="correct"]{background:var(--green);border-color:var(--green);color:#fff}
-.keyboard-row{display:flex;justify-content:center;gap:6px;margin-top:8px}
-.key{min-width:36px;height:48px;border-radius:8px;background:#2b3440;border:0;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0 8px}
-.key.large{min-width:88px}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);align-items:center;justify-content:center}
-.dialog{background:var(--card);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,.03);max-width:420px;text-align:center}
-.dropdown{position:absolute;right:16px;top:54px;background:var(--card);padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.04);display:none;z-index:60}
-.small{font-size:.9rem;color:var(--muted)}
-.network-warn{background:#3b2b2b;color:#ffd3a3;padding:6px 10px;border-radius:8px;font-weight:700}
-</style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Wordle Clone — Reset & Day/Night + Wallet</title>
+    <style>
+        :root {
+            --dark-bg: #121213;
+            --card-bg: #0f1720;
+            --dark-grey: #3a3a3c;
+            --medium-grey: #818384;
+            --light-grey: #d3d6da;
+            --white: #ffffff;
+            --green: #538d4e;
+            --yellow: #b59f3b;
+        }
+
+        body.light {
+            --dark-bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --dark-grey: #c7c7c7;
+            --medium-grey: #d7d7d7;
+            --light-grey: #222;
+            --white: #0b1220;
+            --green: #2e7d32;
+            --yellow: #b59f3b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            user-select: none;
+            padding-bottom: 20px;
+            transition: background-color 0.25s, color 0.25s;
+        }
+
+        header {
+            border-bottom: 1px solid var(--dark-grey);
+            width: 100%;
+            max-width: 720px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            box-sizing: border-box;
+            gap: 8px;
+            background: transparent;
+        }
+        h1 { font-size: 1.2rem; margin: 0; letter-spacing: 0.12em; }
+
+        .header-controls { display:flex; gap:8px; align-items:center; }
+        .btn {
+            background: var(--card-bg);
+            color: var(--white);
+            border: 1px solid var(--dark-grey);
+            padding: 8px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+        }
+        .btn.small { padding:6px 8px; font-size:0.9rem; }
+        .btn.green { background: var(--green); color: #fff; border: 0; }
+
+        #game-wrap { width: 100%; max-width: 560px; padding: 18px; box-sizing: border-box; }
+
+        #game-board {
+            display: grid;
+            grid-template-rows: repeat(6, 1fr);
+            grid-gap: 8px;
+            width: 330px;
+            height: 390px;
+            margin: 20px auto;
+        }
+        .row { display:grid; grid-template-columns: repeat(5, 1fr); grid-gap:8px; }
+
+        .tile {
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--dark-grey);
+            font-size: 2.2rem;
+            font-weight: 800;
+            display:flex; align-items:center; justify-content:center;
+            text-transform:uppercase;
+            box-sizing: border-box;
+            transition: transform 0.2s;
+            backface-visibility: hidden;
+            color: var(--white);
+            background: transparent;
+        }
+        .tile[data-state="wrong"] { background-color: var(--dark-grey); border-color: var(--dark-grey); color: #fff; }
+        .tile[data-state="wrong-location"] { background-color: var(--yellow); border-color: var(--yellow); color: #121212; }
+        .tile[data-state="correct"] { background-color: var(--green); border-color: var(--green); color: #fff; }
+
+        @keyframes bounce { 0%,20%{transform:translateY(0)}40%{transform:translateY(-8px)}50%{transform:translateY(4px)}60%{transform:translateY(-4px)}80%,100%{transform:translateY(0)}}
+        .tile.bounce { animation: bounce 0.5s ease; }
+
+        @keyframes flip { 0%{ transform: rotateX(0deg)} 50%{ transform: rotateX(90deg)} 100%{ transform: rotateX(0deg)}}
+        .tile.flip { animation: flip 0.36s linear; }
+
+        #keyboard { display:flex; flex-direction:column; width:100%; max-width:500px; margin:12px auto 0; }
+        .keyboard-row { display:flex; justify-content:center; margin:4px 0; }
+        .key {
+            background-color: var(--medium-grey);
+            color: var(--white);
+            font-weight:700;
+            border: 0;
+            border-radius:6px;
+            height:48px;
+            margin:0 6px;
+            cursor:pointer; flex:1; display:flex; align-items:center; justify-content:center; text-transform:uppercase;
+            transition: transform .08s ease, background-color .12s;
+            user-select:none;
+        }
+        .key.large { flex:1.5; }
+        .key[data-state="wrong"] { background-color: var(--dark-grey); }
+        .key[data-state="wrong-location"] { background-color: var(--yellow); color: #121212; }
+        .key[data-state="correct"] { background-color: var(--green); }
+
+        .wallet-badge {
+            background: rgba(255,255,255,0.03);
+            padding:6px 10px;
+            border-radius:8px;
+            border:1px solid var(--dark-grey);
+            color:var(--light-grey);
+            font-weight:700;
+            min-width:120px;
+            text-align:center;
+        }
+
+        .dropdown {
+            position:absolute;
+            right:16px;
+            top:54px;
+            background: var(--card-bg);
+            border:1px solid var(--dark-grey);
+            border-radius:10px;
+            padding:8px;
+            z-index:40;
+            display:none;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+        }
+        .dropdown button { display:block; width:100%; margin:6px 0; text-align:left; }
+
+        .modal { display:none; position:fixed; inset:0; z-index:30; background: rgba(0,0,0,0.55); align-items:center; justify-content:center; }
+        .modal .modal-content {
+            background: var(--card-bg);
+            border:1px solid var(--dark-grey);
+            padding:20px; border-radius:12px; width:90%; max-width:420px; text-align:center;
+        }
+
+        @media (max-width:420px){
+            #game-board { width:260px; height:310px; }
+            .tile { font-size:1.6rem; }
+            .key { height:44px; margin:0 4px; }
+        }
+    </style>
 </head>
 <body>
+    <header>
+        <h1>WORDLE CLONE</h1>
+        <div class="header-controls" style="position:relative;">
+            <button id="reset-btn" class="btn small" title="Reset game">🔁 Reset</button>
+            <button id="theme-btn" class="btn small" title="Toggle day/night">🌙 / ☀️</button>
 
-<header class="header">
-  <div class="title">WORDLE CLONE</div>
-  <div class="header-actions">
-    <button id="reset-btn" class="btn">🔁 Reset</button>
-    <button id="theme-btn" class="btn">🌙</button>
+            <!-- Wallet badge (shows address or Not connected) -->
+            <div id="wallet-badge" class="wallet-badge">Not connected</div>
 
-    <div id="network-badge" class="badge" title="Network status">Chain: unknown</div>
-    <div id="wallet-badge" class="badge">Not connected</div>
+            <!-- Connect Wallet button -->
+            <button id="connect-btn" class="btn green">Connect Wallet</button>
 
-    <button id="connect-btn" class="btn green">Connect Wallet</button>
+            <!-- Dropdown (hidden by default) -->
+            <div id="wallet-dropdown" class="dropdown" aria-hidden="true">
+                <div style="font-weight:700; color:var(--white); margin-bottom:6px;">Choose Wallet</div>
+                <button id="connect-metamask" class="btn" type="button">MetaMask</button>
+                <button id="connect-okx" class="btn" type="button">OKX Wallet</button>
+                <button id="connect-injected" class="btn" type="button">Injected (Other)</button>
+                <div style="font-size:0.85rem; color:var(--light-grey); margin-top:6px;">If not detected, open extension and choose Injected.</div>
+            </div>
+        </div>
+    </header>
 
-    <div id="wallet-dropdown" class="dropdown" aria-hidden="true">
-      <div style="font-weight:700;margin-bottom:6px">Choose Wallet</div>
-      <button id="connect-metamask" class="btn" style="width:100%;text-align:left">MetaMask</button>
-      <button id="connect-okx" class="btn" style="width:100%;text-align:left">OKX Wallet</button>
-      <button id="connect-injected" class="btn" style="width:100%;text-align:left">Injected (Other)</button>
-      <div class="small" style="margin-top:6px">If not detected, open extension first then try Injected.</div>
+    <div id="game-wrap">
+        <div id="instructions" style="max-width:520px;margin:6px auto 14px;background:var(--card-bg);border:1px solid var(--dark-grey);padding:12px;border-radius:8px;color:var(--light-grey);">
+            <strong>Instructions:</strong>
+            <ul style="margin:8px 0 0 18px;padding:0">
+                <li>You have 6 chances to guess the word (5 letters)</li>
+                <li>Green = correct place, Yellow = present but wrong place, Grey = not present</li>
+            </ul>
+        </div>
+
+        <div id="game-board"></div>
+        <div id="keyboard"></div>
     </div>
-  </div>
-</header>
 
-<main class="container">
-  <section class="card">
-    <div style="margin-bottom:12px" class="small">
-      Connect your wallet (MetaMask/OKX). After connecting, game will try to switch/add Sepolia automatically when you submit.
+    <!-- Modal -->
+    <div id="game-modal" class="modal" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <h2 id="modal-title">Congratulations!</h2>
+            <div class="word" id="modal-word" style="font-size:2rem;font-weight:800;color:var(--green);margin:6px 0">CLOUD</div>
+            <p id="modal-subtitle">You guessed it in 6 guesses!</p>
+            <div id="modal-proof-status" style="margin-top:8px;font-weight:700"></div>
+            <div style="margin-top:12px;">
+                <a id="modal-explorer-link" href="#" target="_blank" style="color:var(--light-grey);display:none;">View tx on explorer</a>
+            </div>
+            <div style="margin-top:14px;">
+                <button id="submit-score-btn" class="btn" style="display:none;background:var(--green);">Submit Score to Blockchain</button>
+            </div>
+        </div>
     </div>
 
-    <div id="game-board"></div>
-    <div id="keyboard"></div>
-  </section>
-</main>
+    <!-- ethers (same CDN as before) -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
-<!-- Modal -->
-<div id="game-modal" class="modal" role="dialog" aria-modal="true">
-  <div class="dialog">
-    <h2 id="modal-title">Congratulations!</h2>
-    <div id="modal-word" style="font-weight:800;font-size:24px;color:var(--green);margin:8px 0">CLOUD</div>
-    <div id="modal-sub" class="small">You guessed it in 4 guesses</div>
-    <div id="modal-proof" style="margin-top:10px;font-weight:700"></div>
-    <div style="margin-top:12px">
-      <a id="modal-explorer" href="#" target="_blank" style="display:none;color:var(--muted)">View tx on explorer</a>
-    </div>
-    <div style="margin-top:14px">
-      <button id="submit-btn" class="btn green" style="display:none">Submit Score to Blockchain</button>
-      <button id="close-btn" class="btn" style="margin-left:8px">Close</button>
-    </div>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-<script>
-/* ---------- CONFIG ---------- */
-const CONTRACT_ADDRESS = "0xC5eed354DeAeCddbF17445518A305F7Ced43Fd7e";
-const CONTRACT_ABI = ["function submitWordleScore(uint256 guesses)"];
-const TARGET = {
-  chainId_decimal: 11155111,
-  chainId_hex: "0xaa36a7",
-  chainName: "Sepolia test network",
-  nativeCurrency: { name: "SepoliaETH", symbol: "SepoliaETH", decimals: 18 },
-  rpcUrls: ["https://rpc.sepolia.org"],
-  blockExplorerUrls: ["https://sepolia.etherscan.io"]
-};
-
-/* ---------- GAME ---------- */
-const WORDS = ["CLOUD","GHOST","TABLE","APPLE","HOUSE","PLANE","TRAIN","BRICK","FRAME","LIGHT"];
-let SECRET = pick();
-const ROWS = 6, LEN = 5;
-let row=0,col=0,isOver=false;
-let guesses = Array(ROWS).fill(null).map(()=>Array(LEN).fill(""));
-
-/* DOM */
-const board = document.getElementById('game-board');
-const keyboard = document.getElementById('keyboard');
-const connectBtn = document.getElementById('connect-btn');
-const walletBadge = document.getElementById('wallet-badge');
-const networkBadge = document.getElementById('network-badge');
-const dropdown = document.getElementById('wallet-dropdown');
-const connectMeta = document.getElementById('connect-metamask');
-const connectOkx = document.getElementById('connect-okx');
-const connectInjected = document.getElementById('connect-injected');
-const submitBtn = document.getElementById('submit-btn');
-const modal = document.getElementById('game-modal');
-const modalProof = document.getElementById('modal-proof');
-const modalExplorer = document.getElementById('modal-explorer');
-const closeBtn = document.getElementById('close-btn');
-
-let provider=null, signer=null, addr=null, providerName=null;
-
-/* ---------- Helpers ---------- */
-function pick(){ return WORDS[Math.floor(Math.random()*WORDS.length)]; }
-function short(a){ return a? a.slice(0,6)+'...'+a.slice(-4):''; }
-function setWallet(text){ walletBadge.textContent = text; }
-function setNetwork(text){ networkBadge.textContent = text; }
-
-/* ---------- Init UI ---------- */
-function initBoard(){
-  board.innerHTML = '';
-  for(let r=0;r<ROWS;r++){
-    const rowEl = document.createElement('div'); rowEl.className='row';
-    for(let c=0;c<LEN;c++){
-      const t = document.createElement('div'); t.className='tile'; t.id=`tile-${r}-${c}`; t.dataset.state='empty';
-      rowEl.appendChild(t);
-    }
-    board.appendChild(rowEl);
-  }
-}
-function initKeyboard(){
-  keyboard.innerHTML = '';
-  const layout = ["q w e r t y u i o p","a s d f g h j k l","enter z x c v b n m backspace"];
-  layout.forEach(r=>{
-    const rowEl = document.createElement('div'); rowEl.className='keyboard-row';
-    r.split(' ').forEach(k=>{
-      const b = document.createElement('button'); b.className='key'; b.id=`key-${k}`; b.textContent = (k==='backspace')?'⌫': (k==='enter'?'ENTER':k.toUpperCase());
-      if(k==='enter' || k==='backspace') b.classList.add('large');
-      b.dataset.state=''; b.disabled=false; b.style.cursor='';
-      b.addEventListener('click', ()=> handleKey(k));
-      rowEl.appendChild(b);
-    });
-    keyboard.appendChild(rowEl);
-  });
-}
-
-/* ---------- Input ---------- */
-function handleKey(k){
-  if(isOver) return;
-  if(k==='enter') submit();
-  else if(k==='backspace') del();
-  else if(k.length===1 && /[a-z]/i.test(k)) add(k);
-}
-function add(ch){
-  if(col>=LEN) return;
-  const c = ch.toUpperCase();
-  guesses[row][col]=c;
-  const tile = document.getElementById(`tile-${row}-${col}`);
-  tile.textContent = c; tile.dataset.state='tbd';
-  tile.classList.add('bounce'); tile.addEventListener('animationend', ()=> tile.classList.remove('bounce'), {once:true});
-  col++;
-}
-function del(){
-  if(col===0) return;
-  col--; guesses[row][col]='';
-  const tile = document.getElementById(`tile-${row}-${col}`);
-  tile.textContent=''; tile.dataset.state='empty';
-}
-async function submit(){
-  if(col!==LEN){ const t=document.getElementById(`tile-${row}-0`); if(t){ t.classList.add('bounce'); t.addEventListener('animationend', ()=> t.classList.remove('bounce'), {once:true}); } return; }
-  isOver=true;
-  const guess = guesses[row].join('').toUpperCase();
-  const freq={}; for(const ch of SECRET) freq[ch]=(freq[ch]||0)+1;
-  const states=Array(LEN).fill('wrong');
-  for(let i=0;i<LEN;i++){ if(guess[i]===SECRET[i]){ states[i]='correct'; freq[guess[i]]--; } }
-  for(let i=0;i<LEN;i++){ if(states[i]!=='correct'){ const ch=guess[i]; if(SECRET.includes(ch) && freq[ch]>0){ states[i]='wrong-location'; freq[ch]--; } } }
-  const ps=[];
-  for(let i=0;i<LEN;i++){
-    const tile=document.getElementById(`tile-${row}-${i}`); const st=states[i];
-    ps.push(new Promise(resolve=>{ setTimeout(()=>{ tile.classList.add('flip'); setTimeout(()=> tile.dataset.state = st, 140); tile.addEventListener('animationend', ()=>{ tile.classList.remove('flip'); resolve(); }, {once:true}); }, i*110); }));
-  }
-  await Promise.all(ps);
-  // update keys
-  for(let i=0;i<LEN;i++){
-    const letter = guess[i]; const key = document.getElementById(`key-${letter.toLowerCase()}`); if(!key) continue;
-    const st = states[i]; const cur = key.dataset.state || '';
-    if(st==='correct') key.dataset.state='correct';
-    else if(st==='wrong-location' && cur!=='correct') key.dataset.state='wrong-location';
-    else if(st==='wrong' && cur!=='correct' && cur!=='wrong-location') key.dataset.state='wrong';
-    key.disabled=false; key.style.cursor='';
-  }
-  if(guess===SECRET){ showModal(true, row+1); return; }
-  if(row===ROWS-1){ showModal(false, row+1); return; }
-  row++; col=0; isOver=false;
-}
-
-/* ---------- Modal ---------- */
-function showModal(win,count){
-  modalProof.textContent=''; modalExplorer.style.display='none'; modalExplorer.removeAttribute('href');
-  if(win){
-    document.getElementById('modal-word').textContent = SECRET;
-    document.getElementById('modal-sub').textContent = `You guessed it in ${count} guesses`;
-    modalProof.textContent='Generating proof...';
-    // simulate
-    setTimeout(()=>{ modalProof.textContent='✅ Verified — you can submit (optional)'; submitBtn.style.display='inline-flex'; }, 1000);
-    submitBtn.onclick = async ()=> {
-      if(!signer || !provider){ modalProof.textContent='Please connect wallet first.'; return; }
-      // check network and send
-      modalProof.textContent='Checking network (Sepolia)...';
-      const raw = provider.provider || window.ethereum;
-      const ok = await ensureSepolia(raw, modalProof);
-      if(!ok) return;
-      // send
-      modalProof.textContent='Sending transaction — approve in wallet...';
-      try{
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-        const tx = await contract.submitWordleScore(count);
-        modalProof.textContent='Transaction sent — waiting confirmation...';
-        await tx.wait();
-        modalProof.textContent='Success — score submitted!';
-        modalExplorer.href = `https://sepolia.etherscan.io/tx/${tx.hash}`; modalExplorer.style.display='inline-block';
-        submitBtn.disabled=true;
-      }catch(err){
-        console.error('tx error', err);
-        modalProof.textContent = 'Transaction failed. See console for details.';
-        // show detailed message for common cases
-        if(err && err.message) {
-          const m = document.createElement('div'); m.style.marginTop='8px'; m.style.fontSize='0.9rem'; m.style.color='#f3b'; m.textContent = 'Error: ' + (err.message || err);
-          modalProof.appendChild(m);
-        }
-      }
+    <script>
+    /*******************************
+     * Config: contract + network
+     *******************************/
+    // Using the Sepolia contract address you provided
+    const contractAddress = "0xC5eed354DeAeCddbF17445518A305F7Ced43Fd7e";
+    const contractABI = ["function submitWordleScore(uint256 guesses)", "function bestScore(address player) view returns (uint256)"];
+    const targetNetwork = {
+        chainId_decimal: 11155111,
+        chainId_hex: "0xaa36a7",
+        chainName: "Sepolia test network",
+        nativeCurrency: { name: "SepoliaETH", symbol: "SepoliaETH", decimals: 18 },
+        rpcUrls: ["https://rpc.sepolia.org"],
+        blockExplorerUrls: ["https://sepolia.etherscan.io"]
     };
-  } else {
-    document.getElementById('modal-word').textContent = SECRET;
-    document.getElementById('modal-sub').textContent = 'Game over — try again';
-    modalProof.textContent = '';
-    submitBtn.style.display='none';
-  }
-  modal.style.display='flex';
-}
-closeBtn.addEventListener('click', ()=> modal.style.display='none');
 
-/* ---------- Wallet connect ---------- */
-connectBtn.addEventListener('click', (e)=>{ e.stopPropagation(); dropdownToggle(); });
-document.addEventListener('click', ()=>{ if(dropdown.style.display==='block') dropdown.style.display='none' });
+    /*******************************
+     * Game variables & settings
+     *******************************/
+    const WORD_LIST = ["CLOUD","GHOST","TABLE","APPLE","HOUSE","PLANE","TRAIN","BRICK","FRAME","LIGHT"];
+    let SECRET_WORD = chooseWord();
 
-connectMeta.addEventListener('click', ()=> connect('metamask'));
-connectOkx.addEventListener('click', ()=> connect('okx'));
-connectInjected.addEventListener('click', ()=> connect('injected'));
+    const BOARD_ROWS = 6;
+    const WORD_LENGTH = 5;
 
-async function connect(kind){
-  dropdown.style.display='none';
-  try{
-    if(kind==='metamask'){
-      if(!window.ethereum || !window.ethereum.isMetaMask){ alert('MetaMask not detected'); return; }
-      await window.ethereum.request({ method:'eth_requestAccounts' });
-      provider = new ethers.providers.Web3Provider(window.ethereum);
-      signer = provider.getSigner();
-      addr = await signer.getAddress();
-      providerName = 'MetaMask';
-    } else if(kind==='okx'){
-      const okxRaw = window.okxwallet || (window.ethereum && window.ethereum.isOkxWallet?window.ethereum:null);
-      const raw = okxRaw || window.ethereum;
-      if(!raw){ alert('OKX not detected'); return; }
-      await raw.request({ method:'eth_requestAccounts' });
-      provider = new ethers.providers.Web3Provider(raw);
-      signer = provider.getSigner();
-      addr = await signer.getAddress();
-      providerName = 'OKX';
-    } else {
-      if(!window.ethereum){ alert('No injected provider'); return; }
-      await window.ethereum.request({ method:'eth_requestAccounts' });
-      provider = new ethers.providers.Web3Provider(window.ethereum);
-      signer = provider.getSigner();
-      addr = await signer.getAddress();
-      providerName = (window.ethereum.isMetaMask?'MetaMask':(window.ethereum.isOkxWallet?'OKX':'Injected'));
+    let currentRow = 0;
+    let currentCol = 0;
+    let guesses = Array(BOARD_ROWS).fill(null).map(()=>Array(WORD_LENGTH).fill(""));
+    let isGameOver = false;
+
+    // Elements
+    const gameBoard = document.getElementById('game-board');
+    const keyboard = document.getElementById('keyboard');
+    const resetBtn = document.getElementById('reset-btn');
+    const themeBtn = document.getElementById('theme-btn');
+    const modal = document.getElementById('game-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalWord = document.getElementById('modal-word');
+    const modalSubtitle = document.getElementById('modal-subtitle');
+    const modalProof = document.getElementById('modal-proof-status');
+    const modalExplorer = document.getElementById('modal-explorer-link');
+    const submitScoreBtn = document.getElementById('submit-score-btn');
+
+    // Wallet UI
+    const connectBtn = document.getElementById('connect-btn');
+    const walletBadge = document.getElementById('wallet-badge');
+    const walletDropdown = document.getElementById('wallet-dropdown');
+    const connectMeta = document.getElementById('connect-metamask');
+    const connectOkx = document.getElementById('connect-okx');
+    const connectInjected = document.getElementById('connect-injected');
+
+    // Web3 state
+    let ethersProvider = null;
+    let signer = null;
+    let connectedAddress = null;
+    let connectedProviderName = null;
+
+    /*******************************
+     * Helpers
+     *******************************/
+    function chooseWord() {
+        return WORD_LIST[Math.floor(Math.random()*WORD_LIST.length)];
     }
-    setWallet(providerName + ': ' + short(addr));
-    // update chain info immediately
-    const rawProv = provider.provider;
-    try { const cid = await rawProv.request({ method:'eth_chainId' }); const dec = (typeof cid==='string' && cid.startsWith('0x'))?parseInt(cid,16):cid; setNetwork('Chain: ' + dec); } catch(e){ setNetwork('Chain: ?'); }
-    // listen
-    if(rawProv && rawProv.on){
-      rawProv.on('accountsChanged', (accs)=>{ if(!accs || accs.length===0) disconnect(); else { addr=accs[0]; setWallet(providerName+': '+short(addr)); } });
-      rawProv.on('chainChanged', (cid)=>{ const dec = (typeof cid==='string' && cid.startsWith('0x'))?parseInt(cid,16):cid; setNetwork('Chain: '+dec); });
-    }
-  }catch(e){
-    console.error('connect error', e);
-    alert('Connection failed: ' + (e && e.message ? e.message : e));
-  }
-}
+    function shortAddr(a){ return a ? a.slice(0,6) + '...' + a.slice(-4) : ''; }
+    function setWalletBadge(text){ walletBadge.textContent = text; }
 
-function disconnect(){ provider=null; signer=null; addr=null; providerName=null; setWallet('Not connected'); setNetwork('Chain: -'); }
-
-/* ---------- Ensure Sepolia (switch/add) ---------- */
-async function ensureSepolia(rawProv, statusEl){
-  if(!rawProv || !rawProv.request){ if(statusEl) statusEl.textContent='Wallet provider missing'; return false; }
-  try{
-    const chainIdHex = await rawProv.request({ method:'eth_chainId' });
-    const cur = (typeof chainIdHex==='string' && chainIdHex.startsWith('0x'))?parseInt(chainIdHex,16):chainIdHex;
-    setNetwork('Chain: '+cur);
-    if(cur === TARGET.chainId_decimal) return true;
-    if(statusEl) statusEl.textContent = 'Requesting network switch to Sepolia...';
-    try{
-      await rawProv.request({ method:'wallet_switchEthereumChain', params:[{ chainId: TARGET.chainId_hex }]});
-      if(statusEl) statusEl.textContent='Switched to Sepolia';
-      return true;
-    }catch(switchErr){
-      console.warn('switchErr', switchErr);
-      // 4902 = chain not added
-      if(switchErr && (switchErr.code === 4902 || (switchErr.message && switchErr.message.includes('4902')))){
-        try{
-          await rawProv.request({ method:'wallet_addEthereumChain', params: [{
-            chainId: TARGET.chainId_hex, chainName: TARGET.chainName, nativeCurrency: TARGET.nativeCurrency,
-            rpcUrls: TARGET.rpcUrls, blockExplorerUrls: TARGET.blockExplorerUrls
-          }]});
-          // then switch
-          await rawProv.request({ method:'wallet_switchEthereumChain', params:[{ chainId: TARGET.chainId_hex }]});
-          if(statusEl) statusEl.textContent='Added & switched to Sepolia';
-          return true;
-        }catch(addErr){
-          console.error('addErr', addErr);
-          if(statusEl) statusEl.textContent='Could not add Sepolia: '+ (addErr && addErr.message ? addErr.message : addErr);
-          return false;
+    /*******************************
+     * Init UI / Keyboard / Board
+     *******************************/
+    function initBoard() {
+        gameBoard.innerHTML = "";
+        for (let r=0;r<BOARD_ROWS;r++){
+            const rowEl = document.createElement('div'); rowEl.className='row';
+            for (let c=0;c<WORD_LENGTH;c++){
+                const tile = document.createElement('div');
+                tile.className='tile';
+                tile.id = `tile-${r}-${c}`;
+                tile.dataset.state = 'empty';
+                rowEl.appendChild(tile);
+            }
+            gameBoard.appendChild(rowEl);
         }
-      } else {
-        if(statusEl) statusEl.textContent='Please switch wallet network to Sepolia';
-        return false;
-      }
     }
-  }catch(e){
-    console.error('ensureSepolia error', e);
-    if(statusEl) statusEl.textContent = 'Network check failed: ' + (e && e.message ? e.message : e);
-    return false;
-  }
-}
 
-/* ---------- Utilities ---------- */
-function dropdownToggle(){ dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block'; }
+    function initKeyboard(){
+        keyboard.innerHTML = "";
+        const keyLayout = ["q w e r t y u i o p","a s d f g h j k l","enter z x c v b n m backspace"];
+        keyLayout.forEach(row=>{
+            const rowEl = document.createElement('div'); rowEl.className='keyboard-row';
+            row.split(' ').forEach(k=>{
+                const keyEl = document.createElement('button');
+                keyEl.className='key';
+                keyEl.id = `key-${k}`;
+                keyEl.textContent = (k === 'backspace') ? '⌫' : (k === 'enter' ? 'ENTER' : k.toUpperCase());
+                keyEl.disabled = false;
+                keyEl.style.cursor = '';
+                keyEl.dataset.state = "";
+                if (k==='enter' || k==='backspace') keyEl.classList.add('large');
+                keyEl.addEventListener('click', ()=> handleKeyPress(k));
+                rowEl.appendChild(keyEl);
+            });
+            keyboard.appendChild(rowEl);
+        });
+    }
 
-/* ---------- Boot ---------- */
-initBoard(); initKeyboard();
-document.addEventListener('keydown', (e)=>{ if(e.key==='Enter') handleKey('enter'); else if(e.key==='Backspace') handleKey('backspace'); else if(e.key.length===1 && /[a-z]/i.test(e.key)) handleKey(e.key.toLowerCase()); });
-document.getElementById('reset-btn').addEventListener('click', ()=> { if(confirm('Reset game?')) { SECRET=pick(); row=0;col=0;isOver=false;guesses=Array(ROWS).fill(null).map(()=>Array(LEN).fill('')); initBoard(); initKeyboard(); } });
-document.getElementById('theme-btn').addEventListener('click', ()=> document.body.classList.toggle('light'));
+    /*******************************
+     * Reset / Theme
+     *******************************/
+    function resetGame(){
+        SECRET_WORD = chooseWord();
+        currentRow = 0; currentCol = 0;
+        guesses = Array(BOARD_ROWS).fill(null).map(()=>Array(WORD_LENGTH).fill(""));
+        isGameOver = false;
+        initBoard();
+        initKeyboard();
+        closeModal();
+        document.querySelectorAll('.key').forEach(k => { k.dataset.state = ""; k.disabled = false; k.style.cursor = ''; });
+    }
 
-</script>
+    const THEME_KEY = 'zkwordle_theme';
+    function loadTheme(){ const t = localStorage.getItem(THEME_KEY); if (t === 'light') document.body.classList.add('light'); }
+    function toggleTheme(){ document.body.classList.toggle('light'); localStorage.setItem(THEME_KEY, document.body.classList.contains('light') ? 'light' : 'dark'); }
+
+    /*******************************
+     * Input handling
+     *******************************/
+    function handleKeyPress(key){
+        if (isGameOver) return;
+        if (key === 'enter') submitGuess();
+        else if (key === 'backspace') deleteLetter();
+        else if (key.length === 1 && key.match(/[a-z]/i)) addLetter(key);
+    }
+    function handlePhysicalKeyboard(e){
+        if (isGameOver) return;
+        if (e.key === 'Enter') handleKeyPress('enter');
+        else if (e.key === 'Backspace') handleKeyPress('backspace');
+        else if (e.key.length === 1 && e.key.match(/[a-z]/i)) handleKeyPress(e.key.toLowerCase());
+    }
+
+    function addLetter(letter){
+        if (currentCol >= WORD_LENGTH) return;
+        const ch = letter.toUpperCase();
+        guesses[currentRow][currentCol] = ch;
+        const tile = document.getElementById(`tile-${currentRow}-${currentCol}`);
+        if (!tile) return;
+        tile.textContent = ch;
+        tile.dataset.state = 'tbd';
+        tile.classList.add('bounce');
+        tile.addEventListener('animationend', ()=> tile.classList.remove('bounce'), {once:true});
+        currentCol++;
+    }
+
+    function deleteLetter(){
+        if (currentCol === 0) return;
+        currentCol--;
+        guesses[currentRow][currentCol] = "";
+        const tile = document.getElementById(`tile-${currentRow}-${currentCol}`);
+        if (!tile) return;
+        tile.textContent = "";
+        tile.dataset.state = 'empty';
+    }
+
+    async function submitGuess(){
+        if (currentCol !== WORD_LENGTH){
+            const tile = document.getElementById(`tile-${currentRow}-0`);
+            if (tile) { tile.classList.add('bounce'); tile.addEventListener('animationend', ()=> tile.classList.remove('bounce'), {once:true}); }
+            return;
+        }
+        isGameOver = true;
+
+        const guess = guesses[currentRow].join("").toUpperCase();
+        const secretFreq = {};
+        for (const ch of SECRET_WORD) secretFreq[ch] = (secretFreq[ch]||0)+1;
+        const statuses = Array(WORD_LENGTH).fill('wrong');
+
+        // pass 1: correct
+        for (let i=0;i<WORD_LENGTH;i++){
+            if (guess[i] === SECRET_WORD[i]) { statuses[i] = 'correct'; secretFreq[guess[i]]--; }
+        }
+        // pass 2: wrong-location
+        for (let i=0;i<WORD_LENGTH;i++){
+            if (statuses[i] !== 'correct'){
+                const ch = guess[i];
+                if (SECRET_WORD.includes(ch) && secretFreq[ch] > 0) { statuses[i] = 'wrong-location'; secretFreq[ch]--; }
+            }
+        }
+
+        // reveal with staggered flip
+        const flipPromises = [];
+        for (let i=0;i<WORD_LENGTH;i++){
+            const tile = document.getElementById(`tile-${currentRow}-${i}`);
+            const state = statuses[i];
+            if (!tile) continue;
+            flipPromises.push(new Promise(resolve=>{
+                setTimeout(()=>{
+                    tile.classList.add('flip');
+                    setTimeout(()=> tile.dataset.state = state, 140);
+                    tile.addEventListener('animationend', ()=>{
+                        tile.classList.remove('flip');
+                        resolve();
+                    }, {once:true});
+                }, i*110);
+            }));
+        }
+        await Promise.all(flipPromises);
+
+        // Update keyboard visuals only (do not disable)
+        for (let i=0;i<WORD_LENGTH;i++){
+            const letter = guess[i];
+            const keyEl = document.getElementById(`key-${letter.toLowerCase()}`);
+            const state = statuses[i];
+            if (!keyEl) continue;
+            const cur = keyEl.dataset.state || "";
+            if (state === 'correct') {
+                keyEl.dataset.state = 'correct';
+            } else if (state === 'wrong-location' && cur !== 'correct') {
+                keyEl.dataset.state = 'wrong-location';
+            } else if (state === 'wrong' && cur !== 'correct' && cur !== 'wrong-location') {
+                keyEl.dataset.state = 'wrong';
+            }
+            keyEl.disabled = false; keyEl.style.cursor = '';
+        }
+
+        if (guess === SECRET_WORD){
+            showModal(true, currentRow+1);
+            return;
+        }
+        if (currentRow === BOARD_ROWS-1){
+            showModal(false, currentRow+1);
+            return;
+        }
+        currentRow++; currentCol = 0; isGameOver = false;
+    }
+
+    /*******************************
+     * Modal / submit tx
+     * NOTE: The explorer link is hidden until tx success.
+     *******************************/
+    function showModal(didWin, guessesCount){
+        if (didWin){
+            modalTitle.textContent = "Congratulations!";
+            modalWord.textContent = SECRET_WORD;
+            modalSubtitle.textContent = `You guessed it in ${guessesCount} guesses!`;
+            modalProof.style.display = 'block';
+            modalProof.textContent = 'Generating proof...';
+            modalExplorer.style.display = 'none';
+            submitScoreBtn.style.display = 'none';
+            submitScoreBtn.disabled = false;
+
+            setTimeout(()=>{
+                modalProof.textContent = '✅ VERIFIED!';
+                modalExplorer.style.display = 'block';
+                submitScoreBtn.style.display = 'inline-flex';
+            }, 1200);
+
+            submitScoreBtn.onclick = async ()=> {
+                // send to chain only if wallet connected
+                if (!signer || !ethersProvider) {
+                    // --- YEH HAI FIX ---
+                    // 1. 'Congratulations' pop-up band karein
+                    closeModal();
+                    // 2. Wallet connect dropdown ko automatic kholein
+                    walletDropdown.style.display = 'block';
+                    // 3. Badge mein hint dein
+                    setWalletBadge('Connect to submit');
+                    return;
+                    // --- END FIX ---
+                }
+                modalProof.textContent = 'Preparing transaction...';
+                await submitScoreToChain(guessesCount);
+            };
+        } else {
+            modalTitle.textContent = "Game Over";
+            modalWord.textContent = SECRET_WORD;
+            modalSubtitle.textContent = "Better luck next time!";
+            modalProof.style.display = 'none';
+            modalExplorer.style.display = 'none';
+            submitScoreBtn.style.display = 'none';
+        }
+        modal.style.display = 'flex';
+    }
+
+    function closeModal(){ modal.style.display = 'none'; }
+
+    /*******************************
+     * Wallet connect: MetaMask / OKX / Generic
+     *******************************/
+    connectBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        walletDropdown.style.display = walletDropdown.style.display === 'block' ? 'none' : 'block';
+    });
+    // close dropdown on outside click
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#connect-btn') && !e.target.closest('#wallet-dropdown')) {
+            walletDropdown.style.display = 'none';
+        }
+    });
+
+    connectMeta.addEventListener('click', ()=> connectProvider('metamask'));
+    connectOkx.addEventListener('click', ()=> connectProvider('okx'));
+    connectInjected.addEventListener('click', ()=> connectProvider('injected'));
+
+    async function connectProvider(kind){
+        walletDropdown.style.display = 'none';
+        try {
+            if (kind === 'metamask') {
+                if (!window.ethereum || !window.ethereum.isMetaMask) { alert('MetaMask not detected'); return; }
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                ethersProvider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = ethersProvider.getSigner();
+                connectedAddress = await signer.getAddress();
+                connectedProviderName = 'MetaMask';
+            } else if (kind === 'okx') {
+                const okxRaw = window.okxwallet || (window.ethereum && window.ethereum.isOkxWallet ? window.ethereum : null);
+                const raw = okxRaw || window.ethereum;
+                if (!raw) { alert('OKX wallet not detected'); return; }
+                await raw.request({ method: 'eth_requestAccounts' });
+                ethersProvider = new ethers.providers.Web3Provider(raw);
+                signer = ethersProvider.getSigner();
+                connectedAddress = await signer.getAddress();
+                connectedProviderName = 'OKX Wallet';
+            } else {
+                if (!window.ethereum) { alert('No injected provider found'); return; }
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                ethersProvider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = ethersProvider.getSigner();
+                connectedAddress = await signer.getAddress();
+                connectedProviderName = (window.ethereum.isMetaMask ? 'MetaMask' : (window.ethereum.isOkxWallet ? 'OKX' : 'Injected'));
+            }
+
+            setWalletBadge((connectedProviderName || 'Wallet') + ': ' + shortAddr(connectedAddress));
+
+            // listen for changes
+            const rawProv = ethersProvider.provider;
+            if (rawProv && rawProv.on) {
+                rawProv.on('accountsChanged', (accs) => {
+                    if (!accs || accs.length === 0) { disconnectWallet(); }
+                    else { connectedAddress = accs[0]; setWalletBadge((connectedProviderName||'Wallet') + ': ' + shortAddr(connectedAddress)); }
+                });
+                rawProv.on('chainChanged', (cid) => {
+                    const dec = (typeof cid === 'string' && cid.startsWith('0x')) ? parseInt(cid,16) : cid;
+                    setWalletBadge((connectedProviderName||'Wallet') + ': ' + shortAddr(connectedAddress) + ' • chain ' + dec);
+                });
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Connection failed or cancelled.');
+        }
+    }
+
+    function disconnectWallet(){
+        ethersProvider = null; signer = null; connectedAddress = null; connectedProviderName = null;
+        setWalletBadge('Not connected');
+    }
+
+    /*******************************
+     * Network switching helper & submit
+     *******************************/
+    async function ensureSepolia(rawProvider, statusEl) {
+        try {
+            if (!rawProvider || !rawProvider.request) { if (statusEl) statusEl.textContent = 'Wallet missing'; return false; }
+            const chainIdHex = await rawProvider.request({ method: 'eth_chainId' });
+            const cur = (typeof chainIdHex === 'string' && chainIdHex.startsWith('0x')) ? parseInt(chainIdHex,16) : Number(chainIdHex);
+            if (cur === targetNetwork.chainId_decimal) return true;
+            if (statusEl) statusEl.textContent = 'Requesting switch to Sepolia...';
+            try {
+                await rawProvider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: targetNetwork.chainId_hex }] });
+                return true;
+            } catch (switchErr) {
+                if (switchErr && (switchErr.code === 4902 || (switchErr.message && switchErr.message.includes('4902')))) {
+                    try {
+                        await rawProvider.request({ method: 'wallet_addEthereumChain', params: [{
+                            chainId: targetNetwork.chainId_hex,
+                            chainName: targetNetwork.chainName,
+                            nativeCurrency: targetNetwork.nativeCurrency,
+                            rpcUrls: targetNetwork.rpcUrls,
+                            blockExplorerUrls: targetNetwork.blockExplorerUrls
+                        }]});
+                        await rawProvider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: targetNetwork.chainId_hex }] });
+                        return true;
+                    } catch (addErr) {
+                        console.error(addErr);
+                        if (statusEl) statusEl.textContent = 'Could not add Sepolia';
+                        return false;
+                    }
+                }
+                if (statusEl) statusEl.textContent = 'Please switch wallet to Sepolia';
+                return false;
+            }
+        } catch (e) {
+            console.error(e);
+            if (statusEl) statusEl.textContent = 'Network check failed';
+            return false;
+        }
+    }
+
+    async function submitScoreToChain(guessesCount) {
+        if (!signer || !ethersProvider) { modalProof.textContent = 'Connect a wallet first.'; return; }
+        const raw = ethersProvider.provider || window.ethereum;
+        const ok = await ensureSepolia(raw, modalProof);
+        if (!ok) return;
+        try {
+            modalProof.textContent = 'Sending tx... Approve in wallet.';
+            const contract = new ethers.Contract(contractAddress, contractABI, signer);
+            const tx = await contract.submitWordleScore(guessesCount);
+            modalProof.textContent = 'Transaction sent. Awaiting confirmation...';
+            await tx.wait();
+            modalProof.textContent = 'Success! Score submitted.';
+            submitScoreBtn.disabled = true;
+            modalExplorer.href = `https://sepolia.etherscan.io/tx/${tx.hash}`;
+            modalExplorer.style.display = 'inline-block';
+        } catch (err) {
+            console.error(err);
+            if (err && err.code === 4001) modalProof.textContent = 'Transaction rejected by user.';
+            else modalProof.textContent = 'Transaction failed. Check console.';
+        }
+    }
+
+    /*******************************
+     * Wire up UI & boot
+     *******************************/
+    initBoard();
+    initKeyboard();
+    loadTheme();
+
+    document.addEventListener('keydown', handlePhysicalKeyboard);
+    resetBtn.addEventListener('click', () => { if (confirm('Reset game?')) resetGame(); });
+    themeBtn.addEventListener('click', toggleTheme);
+
+    // modal close handlers
+    window.addEventListener('click', (e)=> { if (e.target === modal) closeModal(); });
+    window.addEventListener('keydown', (e)=> { if (e.key === 'Escape') closeModal(); });
+
+    // expose for debug
+    window.resetGame = resetGame;
+    window.connectProvider = connectProvider;
+    window.getWalletState = () => ({ connectedAddress, connectedProviderName });
+
+    </script>
 </body>
 </html>
