@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Wordle Clone — Reset & Day/Night</title>
+    <title>ZK Wordle - Wallet Connect</title>
     <style>
         :root {
             --dark-bg: #121213;
@@ -14,6 +14,7 @@
             --white: #ffffff;
             --green: #538d4e;
             --yellow: #b59f3b;
+            --purple: #9b59b6;
         }
 
         body.light {
@@ -38,7 +39,7 @@
             margin: 0;
             user-select: none;
             padding-bottom: 20px;
-            transition: background-color 0.25s, color 0.25s;
+            transition: all 0.25s;
         }
 
         header {
@@ -50,25 +51,28 @@
             justify-content: space-between;
             padding: 12px 16px;
             box-sizing: border-box;
-            gap: 8px;
             background: transparent;
         }
-        h1 { font-size: 1.2rem; margin: 0; letter-spacing: 0.12em; }
+        h1 { font-size: 1.3rem; margin: 0; letter-spacing: 0.12em; font-weight: 800; }
 
-        .header-controls { display:flex; gap:8px; align-items:center; }
+        .header-controls { display: flex; gap: 10px; align-items: center; }
         .btn {
             background: var(--card-bg);
             color: var(--white);
             border: 1px solid var(--dark-grey);
-            padding: 8px 10px;
+            padding: 8px 12px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
-            display:inline-flex;
-            align-items:center;
-            gap:8px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
         }
-        .btn.small { padding:6px 8px; font-size:0.9rem; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn.wallet { background: var(--purple); border-color: var(--purple); }
+        .btn.wallet.connected { background: var(--green); }
 
         #game-wrap { width: 100%; max-width: 560px; padding: 18px; box-sizing: border-box; }
 
@@ -76,11 +80,11 @@
             display: grid;
             grid-template-rows: repeat(6, 1fr);
             grid-gap: 8px;
-            width: 330px;
-            height: 390px;
+            width: 350px;
+            height: 420px;
             margin: 20px auto;
         }
-        .row { display:grid; grid-template-columns: repeat(5, 1fr); grid-gap:8px; }
+        .row { display: grid; grid-template-columns: repeat(5, 1fr); grid-gap: 8px; }
 
         .tile {
             width: 100%;
@@ -88,72 +92,86 @@
             border: 2px solid var(--dark-grey);
             font-size: 2.2rem;
             font-weight: 800;
-            display:flex; align-items:center; justify-content:center;
-            text-transform:uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
             box-sizing: border-box;
-            transition: transform 0.2s;
-            backface-visibility: hidden;
+            transition: all 0.2s;
             color: var(--white);
             background: transparent;
         }
-        .tile[data-state="wrong"] { background-color: var(--dark-grey); border-color: var(--dark-grey); color: #fff; }
-        .tile[data-state="wrong-location"] { background-color: var(--yellow); border-color: var(--yellow); color: #121212; }
-        .tile[data-state="correct"] { background-color: var(--green); border-color: var(--green); color: #fff; }
+        .tile[data-state="wrong"] { background: var(--dark-grey); border-color: var(--dark-grey); color: #fff; }
+        .tile[data-state="wrong-location"] { background: var(--yellow); border-color: var(--yellow); color: #000; }
+        .tile[data-state="correct"] { background: var(--green); border-color: var(--green); color: #fff; }
 
-        @keyframes bounce { 0%,20%{transform:translateY(0)}40%{transform:translateY(-8px)}50%{transform:translateY(4px)}60%{transform:translateY(-4px)}80%,100%{transform:translateY(0)}}
-        .tile.bounce { animation: bounce 0.5s ease; }
+        @keyframes bounce { 0%,20%{transform:translateY(0)} 40%{transform:translateY(-10px)} 60%{transform:translateY(5px)} 80%,100%{transform:translateY(0)} }
+        .tile.bounce { animation: bounce 0.6s ease; }
 
-        @keyframes flip { 0%{ transform: rotateX(0deg)} 50%{ transform: rotateX(90deg)} 100%{ transform: rotateX(0deg)}}
-        .tile.flip { animation: flip 0.36s linear; }
+        @keyframes flip { 0%{ transform: rotateX(0)} 50%{ transform: rotateX(90deg)} 100%{ transform: rotateX(0)} }
+        .tile.flip { animation: flip 0.5s linear; }
 
-        #keyboard { display:flex; flex-direction:column; width:100%; max-width:500px; margin:12px auto 0; }
-        .keyboard-row { display:flex; justify-content:center; margin:4px 0; }
+        #keyboard { display: flex; flex-direction: column; width: 100%; max-width: 500px; margin: 20px auto 0; gap: 8px; }
+        .keyboard-row { display: flex; justify-content: center; gap: 6px; }
         .key {
-            background-color: var(--medium-grey);
+            background: var(--medium-grey);
             color: var(--white);
-            font-weight:700;
+            font-weight: 700;
             border: 0;
-            border-radius:6px;
-            height:48px;
-            margin:0 6px;
-            cursor:pointer; flex:1; display:flex; align-items:center; justify-content:center; text-transform:uppercase;
-            transition: transform .08s ease, background-color .12s;
-            user-select:none;
+            border-radius: 6px;
+            height: 58px;
+            min-width: 43px;
+            cursor: pointer;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            user-select: none;
+            transition: all 0.1s;
         }
-        .key.large { flex:1.5; }
-        .key[data-state="wrong"] { background-color: var(--dark-grey); }
-        .key[data-state="wrong-location"] { background-color: var(--yellow); color: #121212; }
-        .key[data-state="correct"] { background-color: var(--green); }
+        .key:active { transform: scale(0.95); }
+        .key.large { flex: 1.5; font-size: 0.8rem; }
+        .key[data-state="correct"] { background: var(--green); }
+        .key[data-state="wrong-location"] { background: var(--yellow); color: #000; }
+        .key[data-state="wrong"] { background: var(--dark-grey); }
 
-        .modal { display:none; position:fixed; inset:0; z-index:30; background: rgba(0,0,0,0.55); align-items:center; justify-content:center; }
-        .modal .modal-content {
+        .modal { display: none; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; }
+        .modal-content {
             background: var(--card-bg);
-            border:1px solid var(--dark-grey);
-            padding:20px; border-radius:12px; width:90%; max-width:420px; text-align:center;
+            border: 1px solid var(--dark-grey);
+            padding: 24px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
         }
 
-        @media (max-width:420px){
-            #game-board { width:260px; height:310px; }
-            .tile { font-size:1.6rem; }
-            .key { height:44px; margin:0 4px; }
+        @media (max-width: 420px) {
+            #game-board { width: 300px; height: 360px; }
+            .tile { font-size: 1.8rem; }
+            .key { height: 50px; }
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>WORDLE CLONE</h1>
+        <h1>ZK WORDLE</h1>
         <div class="header-controls">
-            <button id="reset-btn" class="btn small" title="Reset game">🔁 Reset</button>
-            <button id="theme-btn" class="btn small" title="Toggle day/night">🌙 / ☀️</button>
+            <button id="reset-btn" class="btn">🔁 Reset</button>
+            <button id="theme-btn" class="btn">🌙 / ☀️</button>
+            <button id="wallet-btn" class="btn wallet">🦊 Connect Wallet</button>
         </div>
     </header>
 
     <div id="game-wrap">
-        <div id="instructions" style="max-width:520px;margin:6px auto 14px;background:var(--card-bg);border:1px solid var(--dark-grey);padding:12px;border-radius:8px;color:var(--light-grey);">
-            <strong>Instructions:</strong>
-            <ul style="margin:8px 0 0 18px;padding:0">
-                <li>You have 6 chances to guess the word (5 letters)</li>
-                <li>Green = correct place, Yellow = present but wrong place, Grey = not present</li>
+        <div id="instructions" style="background:var(--card-bg);border:1px solid var(--dark-grey);padding:16px;border-radius:8px;margin:10px auto;max-width:520px;color:var(--light-grey);">
+            <strong>How to play:</strong>
+            <ul style="margin:10px 0 0 20px;text-align:left;">
+                <li>6 tries to guess 5-letter word</li>
+                <li>🟩 Green = right spot</li>
+                <li>🟨 Yellow = wrong spot</li>
+                <li>Connect wallet → submit score on Sepolia!</li>
             </ul>
         </div>
 
@@ -161,311 +179,205 @@
         <div id="keyboard"></div>
     </div>
 
-    <!-- Modal -->
-    <div id="game-modal" class="modal" role="dialog" aria-modal="true">
+    <!-- Win Modal -->
+    <div id="game-modal" class="modal">
         <div class="modal-content">
-            <h2 id="modal-title">Congratulations!</h2>
-            <div class="word" id="modal-word" style="font-size:2rem;font-weight:800;color:var(--green);margin:6px 0">CLOUD</div>
-            <p id="modal-subtitle">You guessed it in 6 guesses!</p>
-            <div id="modal-proof-status" style="margin-top:8px;font-weight:700"></div>
-            <div style="margin-top:12px;">
-                <a id="modal-explorer-link" href="#" target="_blank" style="color:var(--light-grey);display:none;">View tx on explorer</a>
-            </div>
-            <div style="margin-top:14px;">
-                <button id="submit-score-btn" class="btn" style="display:none;background:var(--green);">Submit Score to Blockchain</button>
+            <h2 id="modal-title">Congrats! 🎉</h2>
+            <div id="modal-word" style="font-size:2.5rem;font-weight:800;color:var(--green);margin:10px 0;"></div>
+            <p id="modal-subtitle"></p>
+            <div id="modal-proof-status" style="margin:10px 0;font-weight:700;color:var(--green);"></div>
+            <a id="modal-explorer-link" href="#" target="_blank" style="color:var(--light-grey);display:none;margin:10px 0;">View on Sepolia Explorer</a>
+            <div style="margin-top:20px;">
+                <button id="submit-score-btn" class="btn" style="background:var(--green);padding:12px 20px;font-size:1rem;">🚀 Submit Score</button>
             </div>
         </div>
     </div>
 
-    <!-- ethers (same CDN as before) -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
     <script>
-    /*******************************
-     * Game variables & settings
-     *******************************/
-    const WORD_LIST = ["CLOUD","GHOST","TABLE","APPLE","HOUSE","PLANE","TRAIN","BRICK","FRAME","LIGHT"];
-    let SECRET_WORD = chooseWord();
+        const WORD_LIST = ["CLOUD","GHOST","TABLE","APPLE","HOUSE","PLANE","TRAIN","BRICK","FRAME","LIGHT","ZAMA","FHE","PROOF","KEYS","BLOCK","CHAIN"];
+        let SECRET_WORD = getNewWord();
+        function getNewWord() { return WORD_LIST[Math.floor(Math.random() * WORD_LIST.length)].toUpperCase(); }
 
-    const BOARD_ROWS = 6;
-    const WORD_LENGTH = 5;
+        const ROWS = 6, COLS = 5;
+        let currentRow = 0, currentCol = 0;
+        let guesses = Array(ROWS).fill().map(() => Array(COLS).fill(""));
+        let gameOver = false;
 
-    let currentRow = 0;
-    let currentCol = 0;
-    let guesses = Array(BOARD_ROWS).fill(null).map(()=>Array(WORD_LENGTH).fill(""));
-    let isGameOver = false;
+        const board = document.getElementById('game-board');
+        const keyboard = document.getElementById('keyboard');
+        const modal = document.getElementById('game-modal');
+        const modalWord = document.getElementById('modal-word');
+        const modalSubtitle = document.getElementById('modal-subtitle');
+        const modalProof = document.getElementById('modal-proof-status');
+        const explorerLink = document.getElementById('modal-explorer-link');
+        const submitBtn = document.getElementById('submit-score-btn');
+        const walletBtn = document.getElementById('wallet-btn');
 
-    // Elements
-    const gameBoard = document.getElementById('game-board');
-    const keyboard = document.getElementById('keyboard');
-    const resetBtn = document.getElementById('reset-btn');
-    const themeBtn = document.getElementById('theme-btn');
-    const modal = document.getElementById('game-modal');
-    const modalTitle = document.getElementById('modal-title');
-    const modalWord = document.getElementById('modal-word');
-    const modalSubtitle = document.getElementById('modal-subtitle');
-    const modalProof = document.getElementById('modal-proof-status');
-    const modalExplorer = document.getElementById('modal-explorer-link');
-    const submitScoreBtn = document.getElementById('submit-score-btn');
+        // === WALLET + CONTRACT ===
+        let provider, signer, contract, address;
+        const CONTRACT_ADDRESS = "0xYourContractAddressHere"; // ← YAHAN APNA DAAL
+        const ABI = ["function submitWordleScore(uint256 guesses) public"];
 
-    // Blockchain placeholders (unchanged)
-    const targetNetwork = {
-        chainId_decimal: 11155111,
-        chainId_hex: "0xaa36a7",
-        chainName: "Sepolia test network",
-        nativeCurrency: { name: "SepoliaETH", symbol: "SepoliaETH", decimals: 18 },
-        rpcUrls: ["https://rpc.sepolia.org"],
-        blockExplorerUrls: ["https://sepolia.etherscan.io"]
-    };
-    const contractAddress = "YAHAN_AAPKA_NAYA_WORDLE_CONTRACT_ADDRESS_AAYEGA";
-    const contractABI = ["function submitWordleScore(uint256 guesses)","function bestScore(address player) view returns (uint256)"];
+        async function connectWallet() {
+            if (!window.ethereum) return alert("Install MetaMask!");
+            try {
+                walletBtn.textContent = "Connecting...";
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+                signer = provider.getSigner();
+                address = await signer.getAddress();
 
-    /*******************************
-     * Helpers
-     *******************************/
-    function chooseWord() {
-        return WORD_LIST[Math.floor(Math.random()*WORD_LIST.length)];
-    }
+                // Switch to Sepolia
+                await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0xaa36a7' }] });
 
-    function initBoard() {
-        gameBoard.innerHTML = "";
-        for (let r=0;r<BOARD_ROWS;r++){
-            const rowEl = document.createElement('div'); rowEl.className='row';
-            for (let c=0;c<WORD_LENGTH;c++){
-                const tile = document.createElement('div');
-                tile.className='tile';
-                tile.id = `tile-${r}-${c}`;
-                tile.dataset.state = 'empty';
-                rowEl.appendChild(tile);
+                contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+                walletBtn.textContent = `${address.slice(0,6)}...${address.slice(-4)}`;
+                walletBtn.classList.add('connected');
+            } catch (e) {
+                alert("Connect failed!");
+                walletBtn.textContent = "🦊 Connect Wallet";
             }
-            gameBoard.appendChild(rowEl);
         }
-    }
 
-    function initKeyboard(){
-        keyboard.innerHTML = "";
-        const keyLayout = ["q w e r t y u i o p","a s d f g h j k l","enter z x c v b n m backspace"];
-        keyLayout.forEach(row=>{
-            const rowEl = document.createElement('div'); rowEl.className='keyboard-row';
-            row.split(' ').forEach(k=>{
-                const keyEl = document.createElement('button');
-                keyEl.className='key';
-                keyEl.id = `key-${k}`;
-                keyEl.textContent = (k === 'backspace') ? '⌫' : (k === 'enter' ? 'ENTER' : k.toUpperCase());
-                // Ensure key is enabled and state cleared (IMPORTANT: do NOT disable keys)
-                keyEl.disabled = false;
-                keyEl.style.cursor = '';
-                keyEl.dataset.state = "";
+        async function submitScore(guesses) {
+            if (!contract) return alert("Connect wallet first!");
+            try {
+                submitBtn.textContent = "Sending...";
+                modalProof.textContent = "Sending tx...";
+                const tx = await contract.submitWordleScore(guesses);
+                modalProof.textContent = "Confirming...";
+                const receipt = await tx.wait();
+                modalProof.textContent = "Score saved on chain! ✅";
+                explorerLink.href = `https://sepolia.etherscan.io/tx/${receipt.transactionHash}`;
+                explorerLink.style.display = "block";
+            } catch (e) {
+                modalProof.textContent = "Failed!";
+                console.error(e);
+            }
+            submitBtn.textContent = "🚀 Submit Score";
+        }
 
-                if (k==='enter' || k==='backspace') keyEl.classList.add('large');
-                keyEl.addEventListener('click', ()=> handleKeyPress(k));
-                rowEl.appendChild(keyEl);
+        // === GAME LOGIC ===
+        function buildBoard() {
+            board.innerHTML = "";
+            for (let i = 0; i < ROWS; i++) {
+                const row = document.createElement('div'); row.className = 'row';
+                for (let j = 0; j < COLS; j++) {
+                    const tile = document.createElement('div'); tile.className = 'tile'; tile.id = `tile-${i}-${j}`;
+                    row.appendChild(tile);
+                }
+                board.appendChild(row);
+            }
+        }
+
+        function buildKeyboard() {
+            keyboard.innerHTML = "";
+            const layout = [
+                "Q W E R T Y U I O P".split(" "),
+                "A S D F G H J K L".split(" "),
+                ["ENTER", "Z", "X", "C", "V", "B", "N", "M", "⌫"]
+            ];
+            layout.forEach(row => {
+                const r = document.createElement('div'); r.className = 'keyboard-row';
+                row.forEach(k => {
+                    const key = document.createElement('button');
+                    key.textContent = k; key.className = 'key';
+                    if (k === "ENTER" || k === "⌫") key.classList.add('large');
+                    key.onclick = () => pressKey(k);
+                    r.appendChild(key);
+                });
+                keyboard.appendChild(r);
             });
-            keyboard.appendChild(rowEl);
-        });
-    }
-
-    function resetGame(){
-        SECRET_WORD = chooseWord();
-        currentRow = 0; currentCol = 0;
-        guesses = Array(BOARD_ROWS).fill(null).map(()=>Array(WORD_LENGTH).fill(""));
-        isGameOver = false;
-
-        // UI reset
-        initBoard();
-        initKeyboard();
-        closeModal();
-
-        // Clear key visual state
-        document.querySelectorAll('.key').forEach(k => {
-            k.dataset.state = "";
-            k.disabled = false;
-            k.style.cursor = '';
-        });
-    }
-
-    /*******************************
-     * Input handling
-     *******************************/
-    function handleKeyPress(key){
-        if (isGameOver) return;
-        if (key === 'enter') submitGuess();
-        else if (key === 'backspace') deleteLetter();
-        else if (key.length === 1 && key.match(/[a-z]/i)) addLetter(key);
-    }
-
-    function handlePhysicalKeyboard(e){
-        if (isGameOver) return;
-        if (e.key === 'Enter') handleKeyPress('enter');
-        else if (e.key === 'Backspace') handleKeyPress('backspace');
-        else if (e.key.length === 1 && e.key.match(/[a-z]/i)) handleKeyPress(e.key.toLowerCase());
-    }
-
-    function addLetter(letter){
-        if (currentCol >= WORD_LENGTH) return;
-        const ch = letter.toUpperCase();
-        guesses[currentRow][currentCol] = ch;
-        const tile = document.getElementById(`tile-${currentRow}-${currentCol}`);
-        if (!tile) return;
-        tile.textContent = ch;
-        tile.dataset.state = 'tbd';
-        tile.classList.add('bounce');
-        tile.addEventListener('animationend', ()=> tile.classList.remove('bounce'), {once:true});
-        currentCol++;
-    }
-
-    function deleteLetter(){
-        if (currentCol === 0) return;
-        currentCol--;
-        guesses[currentRow][currentCol] = "";
-        const tile = document.getElementById(`tile-${currentRow}-${currentCol}`);
-        if (!tile) return;
-        tile.textContent = "";
-        tile.dataset.state = 'empty';
-    }
-
-    async function submitGuess(){
-        if (currentCol !== WORD_LENGTH){
-            const tile = document.getElementById(`tile-${currentRow}-0`);
-            if (tile) { tile.classList.add('bounce'); tile.addEventListener('animationend', ()=> tile.classList.remove('bounce'), {once:true}); }
-            return;
         }
-        isGameOver = true;
 
-        const guess = guesses[currentRow].join("").toUpperCase();
-        const secretFreq = {};
-        for (const ch of SECRET_WORD) secretFreq[ch] = (secretFreq[ch]||0)+1;
-        const statuses = Array(WORD_LENGTH).fill('wrong');
-
-        // pass 1: correct
-        for (let i=0;i<WORD_LENGTH;i++){
-            if (guess[i] === SECRET_WORD[i]) { statuses[i] = 'correct'; secretFreq[guess[i]]--; }
+        function pressKey(key) {
+            if (gameOver) return;
+            if (key === "⌫") { if (currentCol > 0) { currentCol--; guesses[currentRow][currentCol] = ""; updateTile(); } }
+            else if (key === "ENTER") { if (currentCol === COLS) checkGuess(); }
+            else if (currentCol < COLS) { guesses[currentRow][currentCol] = key; currentCol++; updateTile(); }
         }
-        // pass 2: wrong-location
-        for (let i=0;i<WORD_LENGTH;i++){
-            if (statuses[i] !== 'correct'){
-                const ch = guess[i];
-                if (SECRET_WORD.includes(ch) && secretFreq[ch] > 0) { statuses[i] = 'wrong-location'; secretFreq[ch]--; }
+
+        function updateTile() {
+            for (let i = 0; i < COLS; i++) {
+                const tile = document.getElementById(`tile-${currentRow}-${i}`);
+                tile.textContent = guesses[currentRow][i];
+                tile.dataset.state = guesses[currentRow][i] ? 'tbd' : 'empty';
             }
         }
 
-        // reveal with staggered flip (use animationend)
-        const flipPromises = [];
-        for (let i=0;i<WORD_LENGTH;i++){
-            const tile = document.getElementById(`tile-${currentRow}-${i}`);
-            const state = statuses[i];
-            if (!tile) continue;
-            flipPromises.push(new Promise(resolve=>{
-                setTimeout(()=>{
-                    tile.classList.add('flip');
-                    setTimeout(()=> tile.dataset.state = state, 140); // mid-flip reveal
-                    tile.addEventListener('animationend', ()=>{
-                        tile.classList.remove('flip');
-                        resolve();
-                    }, {once:true});
-                }, i*110);
-            }));
-        }
-        await Promise.all(flipPromises);
+        async function checkGuess() {
+            const guess = guesses[currentRow].join("");
+            const freq = {}; SECRET_WORD.split("").forEach(c => freq[c] = (freq[c] || 0) + 1);
+            const states = Array(COLS).fill("wrong");
 
-        // --- KEYBOARD UPDATE: only visual state, DO NOT disable keys ---
-        for (let i=0;i<WORD_LENGTH;i++){
-            const letter = guess[i];
-            const keyEl = document.getElementById(`key-${letter.toLowerCase()}`);
-            const state = statuses[i];
-            if (!keyEl) continue;
-            const cur = keyEl.dataset.state || "";
-            if (state === 'correct') {
-                keyEl.dataset.state = 'correct';
-            } else if (state === 'wrong-location' && cur !== 'correct') {
-                keyEl.dataset.state = 'wrong-location';
-            } else if (state === 'wrong' && cur !== 'correct' && cur !== 'wrong-location') {
-                keyEl.dataset.state = 'wrong';
+            // Correct first
+            for (let i = 0; i < COLS; i++) {
+                if (guess[i] === SECRET_WORD[i]) { states[i] = "correct"; freq[guess[i]]--; }
             }
-            // ensure key remains clickable (no disabling)
-            keyEl.disabled = false;
-            keyEl.style.cursor = '';
+            // Wrong location
+            for (let i = 0; i < COLS; i++) {
+                if (states[i] !== "correct" && SECRET_WORD.includes(guess[i]) && freq[guess[i]] > 0) {
+                    states[i] = "wrong-location"; freq[guess[i]]--;
+                }
+            }
+
+            // Animate flip
+            for (let i = 0; i < COLS; i++) {
+                const tile = document.getElementById(`tile-${currentRow}-${i}`);
+                await new Promise(r => setTimeout(r, i * 100));
+                tile.classList.add('flip');
+                tile.dataset.state = states[i];
+                updateKeyColor(guess[i], states[i]);
+            }
+
+            if (guess === SECRET_WORD) { gameOver = true; showWin(currentRow + 1); }
+            else if (currentRow === ROWS - 1) { gameOver = true; showWin(0); }
+            else { currentRow++; currentCol = 0; }
         }
 
-        // check result
-        if (guess === SECRET_WORD){
-            showModal(true, currentRow+1);
-            return;
+        function updateKeyColor(letter, state) {
+            const key = Array.from(document.querySelectorAll('.key')).find(k => k.textContent === letter);
+            if (!key) return;
+            if (state === "correct") key.dataset.state = "correct";
+            else if (state === "wrong-location" && key.dataset.state !== "correct") key.dataset.state = "wrong-location";
+            else if (key.dataset.state !== "correct" && key.dataset.state !== "wrong-location") key.dataset.state = "wrong";
         }
-        if (currentRow === BOARD_ROWS-1){
-            showModal(false, currentRow+1);
-            return;
-        }
-        currentRow++; currentCol = 0; isGameOver = false;
-    }
 
-    /*******************************
-     * Modal / "ZK" simulation
-     *******************************/
-    function showModal(didWin, guessesCount){
-        if (didWin){
-            modalTitle.textContent = "Congratulations!";
+        function showWin(guesses) {
+            modal.style.display = "flex";
             modalWord.textContent = SECRET_WORD;
-            modalSubtitle.textContent = `You guessed it in ${guessesCount} guesses!`;
-            modalProof.style.display = 'block';
-            modalProof.textContent = 'Generating proof...';
-            modalExplorer.style.display = 'none';
-            submitScoreBtn.style.display = 'none';
-            submitScoreBtn.disabled = false;
-
-            setTimeout(()=>{
-                modalProof.textContent = '✅ VERIFIED!';
-                modalExplorer.style.display = 'block';
-                submitScoreBtn.style.display = 'inline-flex';
-            }, 1400);
-
-            submitScoreBtn.onclick = ()=> {
-                modalProof.textContent = 'Submitting... (wallet required)';
-                // existing blockchain submission function can be called here if wired
-            };
-        } else {
-            modalTitle.textContent = "Game Over";
-            modalWord.textContent = SECRET_WORD;
-            modalSubtitle.textContent = "Better luck next time!";
-            modalProof.style.display = 'none';
-            modalExplorer.style.display = 'none';
-            submitScoreBtn.style.display = 'none';
+            modalSubtitle.textContent = guesses ? `You won in ${guesses} guesses! 🔥` : "Better luck next time!";
+            modalProof.textContent = address ? "Ready to submit!" : "Connect wallet!";
+            explorerLink.style.display = "none";
+            submitBtn.onclick = () => submitScore(guesses || 7);
         }
-        modal.style.display = 'flex';
-    }
 
-    function closeModal(){ modal.style.display = 'none'; }
+        // Reset + Theme
+        document.getElementById('reset-btn').onclick = () => {
+            SECRET_WORD = getNewWord(); currentRow = 0; currentCol = 0; guesses = Array(ROWS).fill().map(() => Array(COLS).fill("")); gameOver = false;
+            buildBoard(); buildKeyboard(); modal.style.display = "none";
+        };
+        document.getElementById('theme-btn').onclick = () => {
+            document.body.classList.toggle('light');
+            localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
+        };
+        walletBtn.onclick = connectWallet;
 
-    /*******************************
-     * Theme toggle
-     *******************************/
-    const THEME_KEY = 'zkwordle_theme';
-    function loadTheme(){
-        const saved = localStorage.getItem(THEME_KEY);
-        if (saved === 'light') document.body.classList.add('light');
-    }
-    function toggleTheme(){
-        document.body.classList.toggle('light');
-        const isLight = document.body.classList.contains('light');
-        localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark');
-    }
+        // Keyboard input
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Enter') pressKey('ENTER');
+            else if (e.key === 'Backspace') pressKey('⌫');
+            else if (e.key.length === 1 && e.key.match(/[a-z]/i)) pressKey(e.key.toUpperCase());
+        });
 
-    /*******************************
-     * Wire up UI & start
-     *******************************/
-    initBoard();
-    initKeyboard();
-    loadTheme();
+        modal.onclick = e => { if (e.target === modal) modal.style.display = "none"; };
 
-    document.addEventListener('keydown', handlePhysicalKeyboard);
-    resetBtn.addEventListener('click', resetGame);
-    themeBtn.addEventListener('click', toggleTheme);
-
-    window.addEventListener('click', (e)=> { if (e.target === modal) closeModal(); });
-    window.addEventListener('keydown', (e)=> { if (e.key === 'Escape') closeModal(); });
-
-    // for debug in console
-    window.resetGame = resetGame;
+        // Start
+        if (localStorage.getItem('theme') === 'light') document.body.classList.add('light');
+        buildBoard();
+        buildKeyboard();
     </script>
 </body>
 </html>
